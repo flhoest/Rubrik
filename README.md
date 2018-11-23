@@ -1,3 +1,19 @@
 # Rubrik
-All about Rubrik scripts
+
+
+__________        ___.            .__  __    
+\______   \ __ __ \_ |__  _______ |__||  | __
+ |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
+ |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
+ |____|_  /|____/  |___  / |__|   |__||__|_ \
+        \/             \/                  \/
+
+All about Rubrik API call in php
+
 Documentation is coming soon.
+
+
+
+
+
+
