@@ -19,10 +19,13 @@
 	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
 	// getRubrikSLAname($clusterConnect,$SLAid)
+	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
 	// rkColorOutput($string)
-	
+	// rkColorRed($string)
+	// formatBytes($bytes, $decimals = 2, $system = 'metric')
+
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -414,35 +417,7 @@
 			}
 		}
 		
-		// Challenge, the source DB snapshot contains path data for datafile and log file. They need to either match the target env or be changed.
-		
 		$config_params=
-// 		"{
-// 			\"recoveryPoint\": 
-// 			{
-// 				\"timestampMs\": ".$timeStamp."
-//   			},
-//   			\"targetInstanceId\": \"".$dbTargetInstanceID."\",
-//   			\"targetDatabaseName\": \"".$dbTargetName."\",
-//   			\"targetFilePaths\": 
-//   			[
-//     			{
-//       				\"logicalName\": \"".$logicalName."\",
-//       				\"newlogicalName\": \"".$dbTargetName."_Data\",
-//       				\"exportPath\": \"".$path."\",
-//       				\"newFilename\": \"".$dbTargetName.".mdf\"
-//     			},
-//     			{
-//       				\"logicalName\": \"".$logicalName."_B\",
-//       				\"newlogicalName\": \"".$dbTargetName."_LOG\",
-//       				\"exportPath\": \"".$path."\",
-//       				\"newFilename\": \"".$dbTargetName.".ldf\"
-//     			}
-//   			],
-//   			\"finishRecovery\": true,
-//   			\"maxDataStreams\": 1
-// 		}";
-
 		"{
 			\"recoveryPoint\": 
 			{
@@ -464,9 +439,6 @@
   			\"finishRecovery\": true,
   			\"maxDataStreams\": 4
 		}";
-
-// 		var_dump($config_params);
-// 		exit();
 
 		$API="/api/v1/mssql/db/".urlencode($dbSourceID)."/export";
 
