@@ -1,12 +1,19 @@
 <?PHP
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.8                       //
-	//                  (c) 2018 - F. Lhoest                                    //
+	//                   Rubrik Php Framework version 0.5                       //
+	//                        (c) 2018 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
-	// Function Inventory
-	// ------------------
+					__________        ___.            .__  __    
+					\______   \ __ __ \_ |__  _______ |__||  | __
+					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
+					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
+					 |____|_  /|____/  |___  / |__|   |__||__|_ \
+						\/             \/                  \/	
+	
+	// Function Index
+	// --------------
 	
 	// getRubrikClusterDetails($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
@@ -24,7 +31,7 @@
 	// rkGetEpoch($dateString)
 	// rkColorOutput($string)
 	// rkColorRed($string)
-	// formatBytes($bytes, $decimals = 2, $system = 'metric')
+	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
 
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
@@ -416,7 +423,7 @@
 				$logicalName=$tSQL[$i]->name;
 			}
 		}
-		
+				
 		$config_params=
 		"{
 			\"recoveryPoint\": 
