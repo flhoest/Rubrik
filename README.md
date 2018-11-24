@@ -1,4 +1,4 @@
-Rubrik API Framework
+##Rubrik API Framework
 
 This project's goal is to provide anyone wo need to script automation a collection of functions that call Rubrik'API. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering.
 
