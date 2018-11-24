@@ -1,13 +1,33 @@
-# Rubrik
+Rubrik API Framework
 
+This project's goal is to provide anyone wo need to script automation a collection of functions that call Rubrik'API. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering.
 
-All about Rubrik API call in php
+Getting Started
 
-Documentation is coming soon.
+In order to make a good use of the provided framework, you first need to have php-cli installed. This is very easy and a lot of documentation on how to set it up on various platform (Windows, Linux & Mac OS) is widely available. THe most common way to deploy php-cli is using your prefered package manager. Within the Linux world, just use yum install php-cli -y.
 
+Prerequisites
 
+Before continuing you need to have some basic information about your environment like Rubrik credentials and IP/Hostname. Once you have them, simply create a file called credentials.php and set the following variable : 
 
+<?PHP
+	$clusterConnect=array(
+		"username" => "username",
+		"password" => "password",
+		"ip" => "0.0.0.0"
+	);
 
+?>
 
+Functions Documentation
 
+[....]
 
+Versioning
+
+The first version of this framework has been published the 23rd of Nov 2018.
+
+Authors
+
+Frederic Lhoest - @flhoest
+Big thanks to Rubrik Support team - very special thanks to Przemek Sliwa
