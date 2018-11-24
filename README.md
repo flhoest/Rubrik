@@ -10,7 +10,7 @@ This project's goal is to provide anyone wo need to script automation a collecti
 
 ## Getting Started
 
-In order to make a good use of the provided framework, you first need to have php-cli installed. This is very easy and a lot of documentation on how to set it up on various platform (Windows, Linux & Mac OS) is widely available. THe most common way to deploy php-cli is using your prefered package manager. Within the Linux world, just use : 
+In order to make a good use of the provided framework, you first need to have php-cli installed. This is very easy and a lot of documentation on how to set it up on various platform (Windows, Linux & Mac OS) is widely available. The most common way to deploy php-cli is using your prefered package manager. Within the Linux world, just use : 
 ```
 yum install php-cli -y.
 ````
