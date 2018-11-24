@@ -34,7 +34,7 @@ Before continuing you need to have some basic information about your environment
 
 The first version of this framework has been published the 23rd of Nov 2018.
 
-Authors
+## Authors
 
-Frederic Lhoest - @flhoest
-Big thanks to Rubrik Support team - very special thanks to Przemek Sliwa
+Frederic Lhoest - *@flhoest*
+Big thanks to Rubrik Support team - very special thanks to *Przemek Sliwa*
