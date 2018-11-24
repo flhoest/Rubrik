@@ -1,4 +1,4 @@
-# Rubrik API Framework
+# Rubrik API Framework (in php!)
 
 ## Background
 
@@ -28,7 +28,34 @@ Before continuing you need to have some basic information about your environment
 
 ## Functions Documentation
 
-[....]
+* getRubrikClusterDetails($clusterConnect)
+
+Input : $ClusterConnect -> array containing connection detail to the Rubrik cluster.
+Output : a json decodable string with all the relevant Rubrik cluster details.
+Usage : 
+
+```
+$cluster=getRubrikClusterDetails($clusterConnect)
+var_dump($cluster)
+```
+The above will display all possible values.
+
+* getRubrikSLAs($clusterConnect)
+* getRubrikClusterID($clusterConnect)
+* getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+* getRubrikTotalStorage($clusterConnect)
+* getRubrikRunway($clusterConnect)
+* getRubrikNodeCount($clusterConnect)
+* rkGetMSSQL($clusterConnect)
+* rkGetSpecificMSSQL($clusterConnect,$sqlID)
+* rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
+* getRubrikSLAname($clusterConnect,$SLAid)
+* rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+* rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
+* rkGetEpoch($dateString)
+* rkColorOutput($string)
+* rkColorRed($string)
+* formatBytes($bytes, $decimals = 2, $system = 'metric')	
 
 ## Versioning
 
