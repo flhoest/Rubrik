@@ -1,7 +1,7 @@
 # Rubrik API Framework (in php!)
 
 ```
-* This documentation is under reviewing and considered as draft!!! *
+*_This documentation is under reviewing and considered as draft!!! *
 ```
 
 ## Background
@@ -34,6 +34,8 @@ Before continuing you need to have some basic information about your environment
 
 -_getRubrikClusterDetails($clusterConnect)
 
+This function returns basic detais about the cluster
+
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json decodable string with all the relevant Rubrik cluster details.
   - Usage : 
@@ -54,6 +56,7 @@ This function returns details about configured SLAs in the cluster.
   
 ```
 $SLA=json_decode(getRubrikSLAs($clusterConnect));
+var_dump($SLA);
 ```
 
 -_getRubrikClusterID($clusterConnect)
@@ -69,7 +72,6 @@ $SLA=json_decode(getRubrikSLAs($clusterConnect));
 -_rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 -_rkGetEpoch($dateString)
 -_rkColorOutput($string)
-  -
 -_rkColorRed($string)
 -_formatBytes($bytes, $decimals = 2, $system = 'metric')	
 
