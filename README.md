@@ -32,7 +32,7 @@ Before continuing you need to have some basic information about your environment
 
 ## Functions Documentation
 
-* getRubrikClusterDetails($clusterConnect)
+-_getRubrikClusterDetails($clusterConnect)
 
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json decodable string with all the relevant Rubrik cluster details.
