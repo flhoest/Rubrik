@@ -63,7 +63,7 @@ The above will display :
 }
 ```
 
--_getRubrikSLAs($clusterConnect)_
+-_getRubrikSLAs($clusterConnect)
 
 This function returns details about configured SLAs in the cluster.
 
@@ -77,6 +77,11 @@ var_dump($SLA);
 ```
 
 -_getRubrikClusterID($clusterConnect)
+
+  - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : a json string with all details regarding SLA
+  - Usage : 
+
 -_getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 -_getRubrikTotalStorage($clusterConnect)
 -_getRubrikRunway($clusterConnect)
