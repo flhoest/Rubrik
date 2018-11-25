@@ -44,7 +44,24 @@ This function returns basic detais about the cluster
 $cluster=getRubrikClusterDetails($clusterConnect)
 var_dump($cluster)
 ```
-The above will display all possible values.
+The above will display :
+
+```
+{
+  "id": "25c9e332-8b42-4b1d-8c6f-32e03cec349a",
+  "version": "4.2.0-p5-1383",
+  "apiVersion": "1",
+  "name": "MyClusterHostName",
+  "timezone": {
+    "timezone": "Europe/Amsterdam"
+  },
+  "geolocation": {
+    "address": "Somewhere on earth"
+  },
+  "acceptedEulaVersion": "1.0",
+  "latestEulaVersion": "1.0"
+}
+```
 
 -_getRubrikSLAs($clusterConnect)_
 
