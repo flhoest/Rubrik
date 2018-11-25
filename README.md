@@ -1,4 +1,4 @@
-# Rubrik API Framework (in php!)
+# Rubrik API Framework (written in Php)
 
 ```
 *This documentation is under reviewing and considered as draft!*
