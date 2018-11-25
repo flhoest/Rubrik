@@ -1,7 +1,7 @@
 # Rubrik API Framework (in php!)
 
 ```
-*This documentation is under reviewing and considered as draft!!!
+*This documentation is under reviewing and considered as draft!*
 ```
 
 ## Background
@@ -32,7 +32,7 @@ Before continuing you need to have some basic information about your environment
 
 ## Functions Documentation
 
--_getRubrikClusterDetails($clusterConnect)
+-_getRubrikClusterDetails($clusterConnect)_
 
 This function returns basic detais about the cluster
 
@@ -63,7 +63,7 @@ The above will display :
 }
 ```
 
--_getRubrikSLAs($clusterConnect)
+-_getRubrikSLAs($clusterConnect)_
 
 This function returns details about configured SLAs in the cluster.
 
@@ -76,26 +76,26 @@ $SLA=json_decode(getRubrikSLAs($clusterConnect));
 var_dump($SLA);
 ```
 
--_getRubrikClusterID($clusterConnect)
+-_getRubrikClusterID($clusterConnect)_
 
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with all details regarding SLA
   - Usage : 
 
--_getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
--_getRubrikTotalStorage($clusterConnect)
--_getRubrikRunway($clusterConnect)
--_getRubrikNodeCount($clusterConnect)
--_rkGetMSSQL($clusterConnect)
--_rkGetSpecificMSSQL($clusterConnect,$sqlID)
--_rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
--_getRubrikSLAname($clusterConnect,$SLAid)
--_rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
--_rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
--_rkGetEpoch($dateString)
--_rkColorOutput($string)
--_rkColorRed($string)
--_formatBytes($bytes, $decimals = 2, $system = 'metric')	
+-_getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)_
+-_getRubrikTotalStorage($clusterConnect)_
+-_getRubrikRunway($clusterConnect)_
+-_getRubrikNodeCount($clusterConnect)_
+-_rkGetMSSQL($clusterConnect)_
+-_rkGetSpecificMSSQL($clusterConnect,$sqlID)_
+-_rkGetMSSQLid($clusterConnect,$dbName,$dbHost)_
+-_getRubrikSLAname($clusterConnect,$SLAid)_
+-_rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)_
+-_rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)_
+-_rkGetEpoch($dateString)_
+-_rkColorOutput($string)_
+-_rkColorRed($string)_
+-_formatBytes($bytes, $decimals = 2, $system = 'metric')_
 
 ## Versioning
 
