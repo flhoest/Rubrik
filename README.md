@@ -34,8 +34,10 @@ Before continuing you need to have some basic information about your environment
 
 * getRubrikClusterDetails($clusterConnect)
 
-Input : $ClusterConnect -> array containing connection detail to the Rubrik cluster.
+Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+
 Output : a json decodable string with all the relevant Rubrik cluster details.
+
 Usage : 
 
 ```
@@ -45,6 +47,11 @@ var_dump($cluster)
 The above will display all possible values.
 
 * getRubrikSLAs($clusterConnect)
+
+Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+
+Output : a json string with all details regarding SLA
+
 * getRubrikClusterID($clusterConnect)
 * getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 * getRubrikTotalStorage($clusterConnect)
