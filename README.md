@@ -162,6 +162,16 @@ object(stdClass)#4 (3) {
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with 
   - Usage : 
+  
+  ```
+  var_dump(getRubrikClusterID($clusterConnect));
+  ```
+
+The above will display :
+
+```
+string(36) "25c3c362-8b42-4b1c-128f-63e03cec349a"
+```
 
 > _getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)_
 > _getRubrikTotalStorage($clusterConnect)_
