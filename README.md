@@ -38,7 +38,7 @@ Before continuing you need to have some basic information about your environment
 
 ## Functions Documentation
 
-###### _getRubrikClusterDetails($clusterConnect)_
+> _getRubrikClusterDetails($clusterConnect)_
 
 This function returns basic detais about the cluster
 
