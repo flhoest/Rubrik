@@ -75,11 +75,86 @@ This function returns details about configured SLAs in the cluster.
 $SLA=json_decode(getRubrikSLAs($clusterConnect));
 var_dump($SLA);
 ```
+The above will display :
+
+```
+object(stdClass)#4 (3) {
+  ["hasMore"]=>
+  bool(false)
+  ["data"]=>
+  array(8) {
+    [0]=>
+    object(stdClass)#5 (24) {
+      ["id"]=>
+      string(36) "18b8afe1-e6e4-4da1-a1a1-5ae6ebd2c2f6"
+      ["primaryClusterId"]=>
+      string(36) "25c9d124-8b42-4b1c-8c6f-63e03cec349a"
+      ["name"]=>
+      string(14) "My SLA"
+      ["frequencies"]=>
+      array(1) {
+        [0]=>
+        object(stdClass)#6 (3) {
+          ["timeUnit"]=>
+          string(6) "Hourly"
+          ["frequency"]=>
+          int(6)
+          ["retention"]=>
+          int(168)
+        }
+      }
+      ["allowedBackupWindows"]=>
+      array(0) {
+      }
+      ["firstFullAllowedBackupWindows"]=>
+      array(0) {
+      }
+      ["maxLocalRetentionLimit"]=>
+      int(604800)
+      ["archivalSpecs"]=>
+      array(0) {
+      }
+      ["replicationSpecs"]=>
+      array(0) {
+      }
+      ["numDbs"]=>
+      int(58)
+      ["numFilesets"]=>
+      int(0)
+      ["numHypervVms"]=>
+      int(0)
+      ["numNutanixVms"]=>
+      int(0)
+      ["numManagedVolumes"]=>
+      int(0)
+      ["numStorageArrayVolumeGroups"]=>
+      int(0)
+      ["numWindowsVolumeGroups"]=>
+      int(0)
+      ["numLinuxHosts"]=>
+      int(0)
+      ["numShares"]=>
+      int(0)
+      ["numWindowsHosts"]=>
+      int(0)
+      ["numVms"]=>
+      int(0)
+      ["numEc2Instances"]=>
+      int(0)
+      ["numVcdVapps"]=>
+      int(0)
+      ["isDefault"]=>
+      bool(false)
+      ["uiColor"]=>
+      string(7) "#aed23e"
+    }
+    [...]
+```
 
 -_getRubrikClusterID($clusterConnect)_
 
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
-  - Output : a json string with all details regarding SLA
+  - Output : a json string with 
   - Usage : 
 
 -_getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)_
