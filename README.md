@@ -1,7 +1,7 @@
 # Rubrik API Framework (written in Php)
 
 ```
-*This documentation is under reviewing and considered as draft!*
+This documentation is under review and considered as draft!
 ```
 
 ## Background
