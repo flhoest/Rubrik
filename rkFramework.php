@@ -1,17 +1,18 @@
 <?PHP
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.5                       //
+	//                   Rubrik Php Framework version 0.8                       //
 	//                        (c) 2018 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
-	/*
-					__________        ___.            .__  __    
+	
+	/*				__________        ___.            .__  __    
 					\______   \ __ __ \_ |__  _______ |__||  | __
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/	
+							\/             \/                  \/	
 	*/
+	
 	// Function Index
 	// --------------
 	
@@ -29,6 +30,7 @@
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
+	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkColorOutput($string)
 	// rkColorRed($string)
 	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
@@ -305,7 +307,7 @@
 				$dbID=$result[$i]->id;
 			}
 		}
-		return $dbID;
+		return($dbID);
 	}
 
 	// --------------------------------------------------------
@@ -408,6 +410,7 @@
 
 		// Convert epoch to SQL time stamp
 		$names=rkMSSQLgetFiles($clusterConnect,$dbSourceID,rkEpochToSQL(substr($timeStamp, 0, -3)));
+
 		$logicalName1=$names[0]->logicalName;
 		$logicalName2=$names[1]->logicalName;
 		$fileName1=$names[0]->originalName;
@@ -497,7 +500,71 @@
 		$SQLTime=DateTime::createFromFormat("U",$EpochTime);
 		return date_format($SQLTime,"Y-m-d\TH:i:s");
 	}
+	
+	// ---------------------------------------------------------------------------
+	// Get pohysical size of a snapshot (for restoration purpose)
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+ 	{
+		// 3 Steps 	
+ 		// Step 1 : Get snapshot id based on time /api/v1/mssql/db/<id>/snapshot?after_time=<time1>&before_time=<time2>
 
+		$API="/api/v1/mssql/db/".$dbID."/snapshot?after_time=".urlencode($DateTime)."&before_time=".urlencode($DateTime);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+ 		// Step 2 : Get snapable_id /api/internal/mssql/db/<id>/snappable_id
+
+		$snapshotID=json_decode($result)->data[0]->id;
+		
+		$API="/api/internal/mssql/db/".$dbID."/snappable_id";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$snappableID=json_decode($result)->snappableId;
+
+ 		// Step 3 : Get size of object /api/internal/snapshot/<id>/storage/stats?snappable_id=<id>
+
+		$API="/api/internal/snapshot/".$snapshotID."/storage/stats?snappable_id=".$snappableID;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+// 		$logicalSize=formatBytes(json_decode($result)->logicalBytes,2,"binary");
+		return(json_decode($result)->logicalBytes);
+		
+ 	}
+	
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
 	// ---------------------------------------------------------------------------
