@@ -15,6 +15,12 @@ In order to make a good use of the provided framework, you first need to have ph
 yum install php-cli -y.
 ````
 
+## File Listing
+
+* rkFramework.php -> the list of functions used to query the Rubrik cluster using APIs;
+* rkGetinfo.php -> an example of simple code that shows how to use the framework
+
+
 ## Prerequisites
 
 Before continuing you need to have some basic information about your environment like Rubrik credentials and IP/Hostname. Once you have them, simply create a file called credentials.php and set the following variable : 
