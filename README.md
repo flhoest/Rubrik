@@ -3,7 +3,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![rubrik_logo](https://www.rubrik.com/wp-content/uploads/2016/11/Rubrik-Snowflake-small.png) meets ![php_logo](https://7php.com/pimg/2014/01/elephpant_281_193.png)
+![rubrik_logo](http://rubrik.com/wp-content/uploads/2014/10/logo-large-gray.png) ![php_logo](https://7php.com/pimg/2014/01/elephpant_281_193.png)
 
 
 ## Background
