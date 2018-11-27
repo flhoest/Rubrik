@@ -6,7 +6,7 @@ This documentation is under review and considered as draft!
 
 ## Background
 
-This project's goal is to provide anyone who needs to script automation, a collection of functions that call Rubrik's API. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering.
+This project's goal is to provide anyone who needs to script automation, a collection of functions that call Rubrik's APIs. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering out of the box.
 
 ## Getting Started
 
@@ -193,8 +193,57 @@ string(36) "25c3c362-8b42-4b1c-128f-63e03cec349a"
 	}
 ```
 
+The above will display : 
+
+```
+Time : Tue Nov 27 19:54:03 UTC 2018
+Message : Completed backup of the transaction log for SQL Server database 'Test' from '192.168.34.10\SQLEXPRESS'
+---------
+Time : Tue Nov 27 19:55:30 UTC 2018
+Message : Completed  backup of Microsoft SQL Server Database 'Test' from '192.168.34.10\MSSQLSERVER'
+---------
+Time : Tue Nov 27 19:55:32 UTC 2018
+Message : Initializing SQL Server full backup for 192.168.34.10\MSSQLSERVER\Test
+---------
+```
+
 > _getRubrikTotalStorage($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : an Integer with the total capacity of the Rubrik cluster
+  - Usage sample : 
+```
+var_dump(json_decode(getRubrikTotalStorage($clusterConnect))->bytes);
+```
+
+The above will display : 
+
+```
+int(5454107680768)
+```
+
+or using formatBytes() function : 
+
+```
+string(7) "5.45 TB"
+```
+  
 > _getRubrikRunway($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : an Integer representing the number of days the cluster will continue to perform backups without the need to add more storage. This value is important for capacity planning.
+  - Usage sample : 
+  
+  ```
+  	var_dump(json_decode(getRubrikRunway($clusterConnect))->days);
+  ```
+
+The above will display : 
+
+```
+int(263)
+```
+
 > _getRubrikNodeCount($clusterConnect)_
 > _rkGetMSSQL($clusterConnect)_
 > _rkGetSpecificMSSQL($clusterConnect,$sqlID)_
