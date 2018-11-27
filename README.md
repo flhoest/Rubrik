@@ -174,6 +174,13 @@ string(36) "25c3c362-8b42-4b1c-128f-63e03cec349a"
 ```
 
 > _getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  $numEvents -> integer containing the number of event that you would like to retrieve
+  $eventType -> a string containing the type of event that you would like to retrieve. By default this is "Backup". Possible values are : 
+  - Output : a json string with all details regarding SLA
+  - Usage : 
+
 > _getRubrikTotalStorage($clusterConnect)_
 > _getRubrikRunway($clusterConnect)_
 > _getRubrikNodeCount($clusterConnect)_
