@@ -31,6 +31,7 @@
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetAllSnapshotInfo($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
 	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
