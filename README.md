@@ -366,14 +366,23 @@ array(66) {
 ```
 
 > _rkGetSpecificMSSQL($clusterConnect,$sqlID)_
+
 > _rkGetMSSQLid($clusterConnect,$dbName,$dbHost)_
+
 > _getRubrikSLAname($clusterConnect,$SLAid)_
+
 > _rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)_
+
 > _rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)_
+
 > _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime_
+
 > _rkGetEpoch($dateString)_
+
 > _rkColorOutput($string)_
+
 > _rkColorRed($string)_
+
 > _formatBytes($bytes, $decimals = 2, $system = 'metric')_
 
 ## Versioning
