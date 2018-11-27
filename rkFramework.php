@@ -562,7 +562,72 @@
 
 // 		$logicalSize=formatBytes(json_decode($result)->logicalBytes,2,"binary");
 		return(json_decode($result)->logicalBytes);
+ 	}
+
+	// ---------------------------------------------------------------------------
+	// Get Snapshots sizes (ingested, logical and physical) in the entire cluster
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkGetAllSnapshotInfo($clusterConnect)
+ 	{
+		$snapshots=array();
+		// 3 Steps 	
+
+ 		// Step 1 : Get ingested snapshots size -> /api/internal/stats/snapshot_storage/ingested
+
+		$API="/api/internal/stats/snapshot_storage/ingested";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$snapshots["Ingested"]=formatBytes(json_decode($result)->value);
+
+ 		// Step 2 : Get logical snapshots size -> /api/internal/stats/snapshot_storage/logical
 		
+		$API="/api/internal/stats/snapshot_storage/logical";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$snapshots["Logical"]=formatBytes(json_decode($result)->value);
+
+ 		// Step 3 : Get physical snapshots size -> /api/internal/stats/snapshot_storage/physical
+
+		$API="/api/internal/stats/snapshot_storage/physical";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$snapshots["Physical"]=formatBytes(json_decode($result)->value);
+						
+ 		return($snapshots);
  	}
 	
 	// ---------------------------------------------------------------------------
