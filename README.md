@@ -3,7 +3,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![alt text](https://www.rubrik.com/wp-content/uploads/2016/11/Rubrik-Snowflake-small.png)
+![alt text](https://www.rubrik.com/wp-content/uploads/2016/11/Rubrik-Snowflake-small.png?style=centerme)
 
 
 ## Background
