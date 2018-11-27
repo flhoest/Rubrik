@@ -235,7 +235,7 @@ string(7) "5.45 TB"
   - Usage sample : 
   
   ```
-  	var_dump(json_decode(getRubrikRunway($clusterConnect))->days);
+  var_dump(json_decode(getRubrikRunway($clusterConnect))->days);
   ```
 
 The above will display : 
@@ -245,7 +245,126 @@ int(263)
 ```
 
 > _getRubrikNodeCount($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : an Integer with the number of physical node in the cluster. Always return `1`for Rubrik EDGE appliances.
+  - Usage sample : 
+  
+```
+var_dump(json_decode(getRubrikNodeCount($clusterConnect))->total);
+```
+
+The above will display : 
+
+```
+int(1)
+```
+
 > _rkGetMSSQL($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : a json string with all information related to MS SQL DB configured in the Rubrik cluster (protected or not).
+  - Usage smaple : 
+
+```
+$msSQL=json_decode(rkGetMSSQL($clusterConnect))->data;
+var_dump($msSQL);
+```
+
+The above will display (output truncated) :
+
+```
+array(66) {
+  [0]=>
+  object(stdClass)#5 (24) {
+    ["hasPermissions"]=>
+    bool(true)
+    ["effectiveSlaDomainId"]=>
+    string(36) "18b8afe1-e6e4-4da1-a1a1-5ae6ebd2c2f6"
+    ["primaryClusterId"]=>
+    string(36) "25c9d362-8b42-4b1c-8c6f-63e03cec349a"
+    ["instanceName"]=>
+    string(11) "MSSQLSERVER"
+    ["effectiveSlaSourceObjectId"]=>
+    string(52) "MssqlDatabase:::0066defc-f758-405a-b8c0-2ddf74a26cd8"
+    ["effectiveSlaSourceObjectName"]=>
+    string(6) "Test"
+    ["configuredSlaDomainId"]=>
+    string(36) "18b8afe1-e6e4-4da1-a1a1-5ae6ebd2c2f6"
+    ["isLogShippingSecondary"]=>
+    bool(false)
+    ["effectiveSlaDomainName"]=>
+    string(14) "MS SQL Backup"
+    ["instanceId"]=>
+    string(52) "MssqlInstance:::41b70765-3eee-4eab-a4df-c21275107f65"
+    ["copyOnly"]=>
+    bool(false)
+    ["recoveryModel"]=>
+    string(6) "SIMPLE"
+    ["id"]=>
+    string(52) "MssqlDatabase:::0066defc-f758-405a-b8c0-2ddf74a26cd8"
+    ["state"]=>
+    string(6) "ONLINE"
+    ["isInAvailabilityGroup"]=>
+    bool(false)
+    ["isLiveMount"]=>
+    bool(false)
+    ["configuredSlaDomainName"]=>
+    string(14) "MS SQL Backup"
+    ["replicas"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#6 (9) {
+        ["instanceId"]=>
+        string(52) "MssqlInstance:::41b70765-3eee-4eab-a4df-c21275107f65"
+        ["instanceName"]=>
+        string(11) "MSSQLSERVER"
+        ["recoveryModel"]=>
+        string(6) "SIMPLE"
+        ["state"]=>
+        string(6) "ONLINE"
+        ["hasPermissions"]=>
+        bool(true)
+        ["isStandby"]=>
+        bool(false)
+        ["recoveryForkGuid"]=>
+        string(36) "203DBD74-E684-4A01-AF74-311BC2273D59"
+        ["isArchived"]=>
+        bool(false)
+        ["rootProperties"]=>
+        object(stdClass)#7 (3) {
+          ["rootType"]=>
+          string(4) "Host"
+          ["rootId"]=>
+          string(43) "Host:::546dcc03-74e5-4524-b648-13f583f39827"
+          ["rootName"]=>
+          string(13) "192.168.10.10"
+        }
+      }
+    }
+    ["slaAssignment"]=>
+    string(6) "Direct"
+    ["rootProperties"]=>
+    object(stdClass)#8 (3) {
+      ["rootType"]=>
+      string(4) "Host"
+      ["rootId"]=>
+      string(43) "Host:::546dcc03-74e5-4524-b648-13f583f39827"
+      ["rootName"]=>
+      string(13) "192.168.10.10"
+    }
+    ["logBackupRetentionHours"]=>
+    int(120)
+    ["isRelic"]=>
+    bool(false)
+    ["name"]=>
+    string(6) "Test"
+    ["logBackupFrequencyInSeconds"]=>
+    int(900)
+  }
+  [...]
+```
+
 > _rkGetSpecificMSSQL($clusterConnect,$sqlID)_
 > _rkGetMSSQLid($clusterConnect,$dbName,$dbHost)_
 > _getRubrikSLAname($clusterConnect,$SLAid)_
