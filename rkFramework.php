@@ -1,7 +1,7 @@
 <?PHP
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.8                       //
+	//                   Rubrik Php Framework version 0.85                      //
 	//                        (c) 2018 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -31,6 +31,7 @@
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetHostID($clusterConnect,$hostName)
 	// rkGetAllSnapshotInfo($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
@@ -564,6 +565,34 @@
 // 		$logicalSize=formatBytes(json_decode($result)->logicalBytes,2,"binary");
 		return(json_decode($result)->logicalBytes);
  	}
+
+	// ---------------------------------------------------------------------------
+	// Get host id from hostname
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkGetHostID($clusterConnect,$hostName)
+ 	{
+
+		$API="/api/v1/host?hostname=".urlencode($hostName);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		if(isset(json_decode($result)->data[0]->id)) return json_decode($result)->data[0]->id;
+		else return(FALSE);
+		
+ 	}
+
+
 
 	// ---------------------------------------------------------------------------
 	// Get Snapshots sizes (ingested, logical and physical) in the entire cluster
