@@ -165,9 +165,9 @@ object(stdClass)#4 (3) {
   - Output : a json string with 
   - Usage sample : 
   
-  ```
-  var_dump(getRubrikClusterID($clusterConnect));
-  ```
+```
+var_dump(getRubrikClusterID($clusterConnect));
+```
 
 The above will display :
 
@@ -185,14 +185,14 @@ string(36) "25c3c362-8b42-4b1c-128f-63e03cec349a"
   - Output : a json string with all details regarding SLA
   - Usage sample : 
 ```
-	$events=json_decode(getRubrikEvents($clusterConnect,$lastEventCount,"Backup","",""));
+$events=json_decode(getRubrikEvents($clusterConnect,$lastEventCount,"Backup","",""));
 	
-	foreach ($events->data as $item) 
-	{
-		print("Time : ".$item->time."\n");
-		print("Message : ".json_decode($item->eventInfo)->message."\n");
-		print("---------\n");
-	}
+foreach ($events->data as $item) 
+{
+	print("Time : ".$item->time."\n");
+	print("Message : ".json_decode($item->eventInfo)->message."\n");
+	print("---------\n");
+}
 ```
 
 The above will display : 
