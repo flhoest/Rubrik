@@ -592,6 +592,34 @@
 		
  	}
 
+	// ---------------------------------------------------------------------------
+	// Send query to refresh specific host (updating DB, Files, number of VMs)
+	// ---------------------------------------------------------------------------
+	
+	function rkRefreshHost($clusterConnect,$hostName)
+	{
+		$hostID=rkGetHostID($clusterConnect,$hostName);
+
+		$API="/api/v1/host/".urlencode($hostID)."/refresh";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return($result);
+	}
+
 
 
 	// ---------------------------------------------------------------------------
