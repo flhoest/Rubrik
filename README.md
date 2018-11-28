@@ -3,7 +3,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![rubrik_logo](http://rubrik.com/wp-content/uploads/2014/10/logo-large-gray.png) ![php_logo](https://7php.com/pimg/2014/01/elephpant_281_193.png)
+![rubrik_logo](http://rubrik.com/wp-content/uploads/2014/10/logo-large-gray.png)       ![php_logo](https://7php.com/pimg/2014/01/elephpant_281_193.png)
 
 
 ## Background
@@ -378,6 +378,8 @@ array(66) {
 > _rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)_
 
 > _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime_
+
+> _rkGetHostID($clusterConnect,$hostName)_
 
 > _rkGetEpoch($dateString)_
 
