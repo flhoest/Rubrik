@@ -377,7 +377,7 @@ array(66) {
 
 > _rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)_
 
-> _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime_
+> _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)_
 
 > _rkGetHostID($clusterConnect,$hostName)_
 
