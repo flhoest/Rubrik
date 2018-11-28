@@ -383,6 +383,55 @@ array(66) {
 
 > _rkRefreshHost($clusterConnect,$hostName)_
 
+> _rkGetUnmanaged($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : a json string with all information related to _Unmanaged objects_.
+  - Usage smaple : 
+```
+$unmanaged=json_decode(rkGetUnmanaged($clusterConnect));
+	
+foreach ($unmanaged->data as $item) 
+{
+	print("Object ID : ".$item->id."\n");
+	print("Object Name : ".$item->name."\n");
+	print("Object located on : ".$item->physicalLocation[0]->name."\n");
+	print("Objedt is : ".$item->unmanagedStatus."\n");
+	print("Size on disk : ".formatBytes($item->localStorage)."\n");
+	print("---------\n");
+}
+```
+
+The above will display (output truncated) :
+
+```
+Object ID : MssqlDatabase:::2dba6a59-c423-4f31-b067-4a200b856ab2
+Object Name : MainDB-Test
+Object located on : 192.168.8.100
+Objedt is : Relic
+Size on disk : 592.84 KB
+---------
+Object ID : MssqlDatabase:::1a425be6-3fc6-4681-93f4-7b8e63d60c31
+Object Name : master
+Object located on : 192.168.8.100
+Objedt is : Relic
+Size on disk : 1.37 MB
+---------
+Object ID : MssqlDatabase:::5e2987fe-87e2-4edd-946b-c44c5d01044c
+Object Name : model
+Object located on : 192.168.8.100
+Objedt is : Relic
+Size on disk : 359.27 KB
+---------
+Object ID : MssqlDatabase:::8e746f72-3e6f-4bc2-8df1-eb9f6e310c7a
+Object Name : msdb
+Object located on : 192.168.8.100
+Objedt is : Relic
+Size on disk : 9.67 MB
+```
+
+This could be usefull to get the potential savings on a cluster. Indeed, those objects could be flushed in most of the cases.
+
 > _rkGetEpoch($dateString)_
 
 > _rkColorOutput($string)_
