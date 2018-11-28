@@ -381,6 +381,8 @@ array(66) {
 
 > _rkGetHostID($clusterConnect,$hostName)_
 
+> _rkRefreshHost($clusterConnect,$hostName)_
+
 > _rkGetEpoch($dateString)_
 
 > _rkColorOutput($string)_
