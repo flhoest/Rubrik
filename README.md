@@ -366,8 +366,141 @@ array(66) {
 ```
 
 > _rkGetSpecificMSSQL($clusterConnect,$sqlID)_
+  - Inputs : 
+    - `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+    - `$sqlID` -> SQL ID of the MS SQL database we are getting details from
+  - Output : a jason sting containing all details about the Database
+  - Usage sample : 
+```
+$id=rkGetMSSQLid($clusterConnect,"MyDB","192.168.1.1");
+var_dump(json_decode(rkGetSpecificMSSQL($clusterConnect,$id)));
+```
+
+The above will display :
+```
+object(stdClass)#282 (33) {
+  ["hasPermissions"]=>
+  bool(true)
+  ["effectiveSlaDomainId"]=>
+  string(36) "18b8afe1-e6e4-4da1-a1a1-5ae6ebd2c2f6"
+  ["oldestRecoveryPoint"]=>
+  string(24) "2018-11-23T18:11:45.000Z"
+  ["primaryClusterId"]=>
+  string(36) "25c9d362-8b42-4b1c-8c6f-63e03cec349a"
+  ["instanceName"]=>
+  string(11) "MSSQLSERVER"
+  ["effectiveSlaSourceObjectId"]=>
+  string(52) "MssqlDatabase:::ade1f958-8edc-4953-9d43-97a591b2ad3b"
+  ["localStorage"]=>
+  int(1045838)
+  ["effectiveSlaSourceObjectName"]=>
+  string(12) "MyDB"
+  ["configuredSlaDomainId"]=>
+  string(36) "18b8afe1-e6e4-4da1-a1a1-5ae6ebd2c2f6"
+  ["isLogShippingSecondary"]=>
+  bool(false)
+  ["effectiveSlaDomainName"]=>
+  string(14) "SQL Backup"
+  ["instanceId"]=>
+  string(52) "MssqlInstance:::41b70765-3eee-4eab-a4df-c21275107f65"
+  ["copyOnly"]=>
+  bool(false)
+  ["recoveryModel"]=>
+  string(6) "SIMPLE"
+  ["recoveryForkGuid"]=>
+  string(36) "462A4379-0AB7-4119-9CD7-B0AF6351B221"
+  ["id"]=>
+  string(52) "MssqlDatabase:::ade1f958-8edc-4953-9d43-97a591b2ad3b"
+  ["state"]=>
+  string(6) "ONLINE"
+  ["isInAvailabilityGroup"]=>
+  bool(false)
+  ["isLiveMount"]=>
+  bool(false)
+  ["configuredSlaDomainName"]=>
+  string(14) "SQL Backup"
+  ["replicas"]=>
+  array(1) {
+    [0]=>
+    object(stdClass)#285 (9) {
+      ["instanceId"]=>
+      string(52) "MssqlInstance:::41b70765-3eee-4eab-a4df-c21275107f65"
+      ["instanceName"]=>
+      string(11) "MSSQLSERVER"
+      ["recoveryModel"]=>
+      string(6) "SIMPLE"
+      ["state"]=>
+      string(6) "ONLINE"
+      ["hasPermissions"]=>
+      bool(true)
+      ["isStandby"]=>
+      bool(false)
+      ["recoveryForkGuid"]=>
+      string(36) "462A4379-0AB7-4119-9CD7-B0AF6351B221"
+      ["isArchived"]=>
+      bool(false)
+      ["rootProperties"]=>
+      object(stdClass)#283 (3) {
+        ["rootType"]=>
+        string(4) "Host"
+        ["rootId"]=>
+        string(43) "Host:::546dcc03-74e5-4524-b648-13f583f39827"
+        ["rootName"]=>
+        string(13) "192.168.1.1"
+      }
+    }
+  }
+  ["latestRecoveryPoint"]=>
+  string(24) "2018-11-29T06:45:10.000Z"
+  ["slaAssignment"]=>
+  string(6) "Direct"
+  ["rootProperties"]=>
+  object(stdClass)#284 (3) {
+    ["rootType"]=>
+    string(4) "Host"
+    ["rootId"]=>
+    string(43) "Host:::546dcc03-74e5-4524-b648-13f583f39827"
+    ["rootName"]=>
+    string(13) "192.168.1.1"
+  }
+  ["isLocal"]=>
+  bool(true)
+  ["protectionDate"]=>
+  string(24) "2018-11-22T13:59:28.807Z"
+  ["logBackupRetentionHours"]=>
+  int(120)
+  ["isRelic"]=>
+  bool(false)
+  ["snapshotCount"]=>
+  int(17)
+  ["name"]=>
+  string(12) "MyDB"
+  ["isStandby"]=>
+  bool(false)
+  ["archiveStorage"]=>
+  int(0)
+  ["logBackupFrequencyInSeconds"]=>
+  int(900)
+}
+```
 
 > _rkGetMSSQLid($clusterConnect,$dbName,$dbHost)_
+
+  - Inputs : 
+    - `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+    - `$dbName` -> string containing the name of the Database
+    - `$dbHost` -> string containing the name of the host where the DB is sitting 
+  - Output : string with the corresponding database ID
+  - Usage sample : 
+```
+$id=rkGetMSSQLid($clusterConnect,"MyDB","192.168.1.1");
+var_dump($id);
+```
+The above will display :
+
+```
+string(52) "MssqlDatabase:::ade1f958-8edc-4953-9d43-97a591b2ad3b"
+```
 
 > _getRubrikSLAname($clusterConnect,$SLAid)_
 
