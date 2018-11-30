@@ -379,6 +379,53 @@ array(66) {
 
 > _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)_
 
+> _rkGetSupportTunnel($clusterConnect)_
+
+  - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : a json string with all information related to the status of the support tunnel.
+  - Usage sample : 
+```	
+$supportTunnel=json_decode(rkGetSupportTunnel($clusterConnect));
+var_dump($supportTunnel);
+```
+
+The above will display : 
+```
+object(stdClass)#34 (3) {
+  ["hasMore"]=>
+  bool(false)
+  ["data"]=>
+  array(1) {
+    [0]=>
+    object(stdClass)#35 (5) {
+      ["id"]=>
+      string(13) "VRVW499E3Y64F"
+      ["brikId"]=>
+      string(6) "RUBRIK"
+      ["status"]=>
+      string(2) "OK"
+      ["ipAddress"]=>
+      string(13) "192.168.x.x"
+      ["supportTunnel"]=>
+      object(stdClass)#36 (5) {
+        ["isTunnelEnabled"]=>
+        bool(true)
+        ["port"]=>
+        int(90729)
+        ["enabledTime"]=>
+        string(24) "2018-11-30T10:12:18.000Z"
+        ["lastActivityTime"]=>
+        string(24) "2018-11-28T15:05:52.000Z"
+        ["inactivityTimeoutInSeconds"]=>
+        int(345600)
+      }
+    }
+  }
+  ["total"]=>
+  int(1)
+}
+```
+
 > _rkGetHostID($clusterConnect,$hostName)_
 
 > _rkRefreshHost($clusterConnect,$hostName)_
@@ -387,7 +434,7 @@ array(66) {
 
   - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with all information related to _Unmanaged objects_.
-  - Usage smaple : 
+  - Usage sample : 
 ```
 $unmanaged=json_decode(rkGetUnmanaged($clusterConnect));
 	
