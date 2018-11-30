@@ -5,7 +5,6 @@ This documentation is under review and considered as draft!
 ```
 ![rubrik_logo](http://rubrik.com/wp-content/uploads/2014/10/logo-large-gray.png)       ![php_logo](https://7php.com/pimg/2014/01/elephpant_281_193.png)
 
-
 ## Background
 
 This project's goal is to provide anyone who needs to script automation, a collection of functions that call Rubrik's APIs. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering out of the box.
@@ -21,7 +20,6 @@ yum install php-cli -y.
 
 * rkFramework.php -> the list of functions used to query the Rubrik cluster using APIs;
 * rkGetinfo.php -> an example of simple code that shows how to use the framework
-
 
 ## Prerequisites
 
@@ -46,7 +44,7 @@ This function returns basic detais about the cluster
 
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json decodable string with all the relevant Rubrik cluster details.
-  - Usage : 
+  - Usage sample : 
   
 ```
 $cluster=getRubrikClusterDetails($clusterConnect)
@@ -77,7 +75,7 @@ This function returns details about configured SLAs in the cluster.
 
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with all details regarding SLA
-  - Usage : 
+  - Usage sample : 
   
 ```
 $SLA=json_decode(getRubrikSLAs($clusterConnect));
@@ -486,6 +484,23 @@ This could be usefull to get the potential savings on a cluster. Indeed, those o
 > _rkColorRed($string)_
 
 > _formatBytes($bytes, $decimals = 2, $system = 'metric')_
+
+- Inputs : an integer representing a size in bytes
+- Output : a human readable size ineither KB, MB, GB, TB. There is the choice to round the metric way (power of 10) or the binary way (power of 2)
+- Usage sample :
+```
+	var_dump(formatBytes(64647383746));
+	var_dump(formatBytes(64647383));
+	var_dump(formatBytes(64647));
+	var_dump(formatBytes(643));
+```
+The above will return :
+```
+string(8) "64.65 GB"
+string(8) "64.65 MB"
+string(8) "64.65 KB"
+string(8) "643.00 B"
+```
 
 ## Versioning
 
