@@ -32,6 +32,7 @@
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkGetHostID($clusterConnect,$hostName)
+	// rkGetSupportTunnel($clusterConnect)
 	// rkGetAllSnapshotInfo($clusterConnect)
 	// rkGetUnmanaged($clusterConnect)
 	// rkColorOutput($string)
@@ -620,6 +621,31 @@
 
 		return($result);
 	}
+
+	// ---------------------------------------------------------------------------
+	// Get Status of the support tunnel
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkGetSupportTunnel($clusterConnect)
+ 	{
+		$API="/api/internal/cluster/me/node";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		if(isset($result)) return $result;
+		else return(FALSE);
+		
+ 	}
 
 	// ---------------------------------------------------------------------------
 	// Get Snapshots sizes (ingested, logical and physical) in the entire cluster
