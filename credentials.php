@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	// This is a sample, please match the below variables with your environment
 
 	$clusterConnect=array(
