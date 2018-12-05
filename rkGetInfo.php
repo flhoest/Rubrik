@@ -12,7 +12,7 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/	
+						\/             \/                  \/	
 	*/
 
 	// This script is retrieving basic information about a Rubrik cluster.
