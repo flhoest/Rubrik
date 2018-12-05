@@ -35,7 +35,7 @@
 	// rkGetSupportTunnel($clusterConnect)
 	// rkGetAllSnapshotInfo($clusterConnect)
 	// rkGetUnmanaged($clusterConnect)
-	// rkColorOutput($string)
+	// rkColorOutput($string) 
 	// rkColorRed($string)
 	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
 
