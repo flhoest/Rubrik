@@ -59,7 +59,7 @@
 		$nodeNum++;
 	}
 
-	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
+	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n"); 
 	
 	// Support Tunnel status
 
