@@ -26,7 +26,7 @@ yum install php-cli -y.
 Before continuing you need to have some basic information about your environment like Rubrik credentials and IP/Hostname. Once you have them, simply create a file called credentials.php and set the following variable : 
 
 ```
-<?PHP
+<?php
 	$clusterConnect=array(
 		"username" => "username",
 		"password" => "password",
@@ -487,8 +487,8 @@ object(stdClass)#282 (33) {
 > _rkGetMSSQLid($clusterConnect,$dbName,$dbHost)_
 
   - Inputs : 
-    - `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
-    - `$dbName` -> string containing the name of the Database
+    - `$ClusterConnect` -> array containing connection detail to the Rubrik cluster;
+    - `$dbName` -> string containing the name of the Database;
     - `$dbHost` -> string containing the name of the host where the DB is sitting 
   - Output : string with the corresponding database ID
   - Usage sample : 
@@ -503,6 +503,25 @@ string(52) "MssqlDatabase:::ade1f958-8edc-4953-9d43-97a591b2ad3b"
 ```
 
 > _getRubrikSLAname($clusterConnect,$SLAid)_
+
+  - Inputs : 
+    - `$ClusterConnect` -> array containing connection detail to the Rubrik cluster;
+    - `$SLAid` -> string containing the SLA ID
+  - Output : string with the corresponding SLA name
+  - Usage sample : 
+  ```
+$SLA=json_decode(getRubrikSLAs($clusterConnect));
+foreach ($SLA->data as $item) 
+{
+   	print($item -> name." \n");
+}
+  ```
+The above will display :
+```
+Bronze
+Silver
+Gold
+```
 
 > _rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)_
 
