@@ -734,8 +734,38 @@
 		curl_close($curl);
 
 		if(isset($result)) return $result;
+		else return(FALSE);		
+ 	}
+
+	// ---------------------------------------------------------------------------
+	// Get total number of snapshots in cluster
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkGetSnapshotCount($clusterConnect)
+ 	{
+		$API="/api/internal/vmware/vm/snapshot/count";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		if(isset($result))
+		{
+			// cleanup result by removing unwanted characters
+			$tmp=explode(":", $result);
+			$res=$tmp[1];
+			$res=str_replace('}', '', $res);
+			return $res;
+		} 
 		else return(FALSE);
-		
  	}
 
 	// ---------------------------------------------------------------------------
