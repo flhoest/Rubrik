@@ -3,7 +3,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//               Rubrik Php Information - rkGetInfo.php v 1.0               //
+	//               Rubrik Php Information - rkGetInfo.php v 1.1               //
 	//                        (c) 2018 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -49,17 +49,18 @@
 	print("| ".str_pad("Atlas version : ".rkColorOutput($cluster -> version),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Total capacity : ".rkColorOutput(formatBytes(json_decode(getRubrikTotalStorage($clusterConnect))->bytes)),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Number of node(s) : ".rkColorOutput(json_decode(getRubrikNodeCount($clusterConnect))->total),$padSize," ",STR_PAD_RIGHT)." |\n");
+		print("| ".str_pad("Total Snapshot(s) : ".rkColorOutput(rkGetSnapshotCount($clusterConnect)),$padSize," ",STR_PAD_RIGHT)." |\n");
 
 	$clusterData=json_decode(getRubrikNodeCount($clusterConnect));
-
 	$nodeNum=1;
+
  	foreach ($clusterData->data as $item) 
 	{
 		print("| ".str_pad("Node #".$nodeNum." : ".rkColorOutput($item->id." (".$item->ipAddress.")"),$padSize," ",STR_PAD_RIGHT)." |\n");
 		$nodeNum++;
 	}
 
-	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n"); 
+	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	
 	// Support Tunnel status
 
