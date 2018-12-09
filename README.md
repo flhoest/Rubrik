@@ -629,6 +629,8 @@ Size on disk : 9.67 MB
 
 This could be usefull to get the potential savings on a cluster. Indeed, those objects could be flushed in most of the cases.
 
+> _rkGetSnapshotCount($clusterConnect)_
+
 > _rkGetEpoch($dateString)_
 
 > _rkColorOutput($string)_
