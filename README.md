@@ -69,6 +69,21 @@ The above will display :
 }
 ```
 
+> _rkGetClusterVersion($clusterConnect)_
+
+  - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
+  - Output : a string with the running version installed on the cluster.
+  - Usage sample : 
+```
+var_dump(rkGetClusterVersion($clusterConnect));
+```
+
+The above will display : 
+
+```
+string(10) "4.2.1-1417"
+```
+
 > _getRubrikSLAs($clusterConnect)_
 
 This function returns details about configured SLAs in the cluster.
