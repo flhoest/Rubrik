@@ -1,4 +1,4 @@
-<?PHP
+<?php
 
 	//////////////////////////////////////////////////////////////////////////////
 	//                   Rubrik Php Framework version 0.85                      //
@@ -10,13 +10,14 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-		                                \/             \/                  \/	
+						\/             \/                  \/	
 	*/
 	
 	// Function Index
 	// --------------
 	
 	// getRubrikClusterDetails($clusterConnect)
+	// rkGetClusterVersion($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
@@ -31,11 +32,7 @@
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
-	// rkGetHostID($clusterConnect,$hostName)
-	// rkGetSupportTunnel($clusterConnect)
-	// rkGetAllSnapshotInfo($clusterConnect)
-	// rkGetUnmanaged($clusterConnect)
-	// rkColorOutput($string) 
+	// rkColorOutput($string)
 	// rkColorRed($string)
 	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
 
@@ -60,6 +57,29 @@
 		curl_close($curl);
 
 		return $result;
+	}
+	
+	// --------------------------------------------------
+	// Function to get the running version on the cluster
+	// --------------------------------------------------
+	
+	function rkGetClusterVersion($clusterConnect)
+	{
+		$API="/api/v1/cluster/me";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return(json_decode($result)->version);
 	}
 		
 	// ----------------------------------------------------------------------------
@@ -506,7 +526,7 @@
 	}
 	
 	// ---------------------------------------------------------------------------
-	// Get pohysical size of a snapshot (for restoration purpose)
+	// Get physical size of a snapshot (for restoration purpose)
 	// ---------------------------------------------------------------------------
  
  	function rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
@@ -566,6 +586,7 @@
 
 // 		$logicalSize=formatBytes(json_decode($result)->logicalBytes,2,"binary");
 		return(json_decode($result)->logicalBytes);
+		
  	}
 
 	// ---------------------------------------------------------------------------
@@ -574,7 +595,6 @@
  
  	function rkGetHostID($clusterConnect,$hostName)
  	{
-
 		$API="/api/v1/host?hostname=".urlencode($hostName);
 
 		$curl = curl_init();
@@ -734,7 +754,8 @@
 		curl_close($curl);
 
 		if(isset($result)) return $result;
-		else return(FALSE);		
+		else return(FALSE);
+		
  	}
 
 	// ---------------------------------------------------------------------------
@@ -767,7 +788,7 @@
 		} 
 		else return(FALSE);
  	}
-
+		
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
 	// ---------------------------------------------------------------------------
