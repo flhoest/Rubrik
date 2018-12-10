@@ -19,7 +19,7 @@
 	// It is making good use of the rkFramework.php and is provided as an example
 	// Note : there is a lot of layout functions (str_pad) so the actual code is much
 	// simpler than you may think once those functions have been removed.
-	// The whole purpose of this is
+	// The whole purpose of this is to get quick information on the target cluster.
 
 	include_once "credentials.php";
 	include_once "rkFramework.php";
@@ -49,7 +49,7 @@
 	print("| ".str_pad("Atlas version : ".rkColorOutput($cluster -> version),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Total capacity : ".rkColorOutput(formatBytes(json_decode(getRubrikTotalStorage($clusterConnect))->bytes)),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Number of node(s) : ".rkColorOutput(json_decode(getRubrikNodeCount($clusterConnect))->total),$padSize," ",STR_PAD_RIGHT)." |\n");
-		print("| ".str_pad("Total Snapshot(s) : ".rkColorOutput(rkGetSnapshotCount($clusterConnect)),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Total Snapshot(s) : ".rkColorOutput(rkGetSnapshotCount($clusterConnect)),$padSize," ",STR_PAD_RIGHT)." |\n");
 
 	$clusterData=json_decode(getRubrikNodeCount($clusterConnect));
 	$nodeNum=1;
@@ -107,7 +107,6 @@
 	$availableSpace=json_decode(getRubrikAvailableStorage($clusterConnect));
 	print("| ".str_pad("Available Space : ".rkColorOutput(formatBytes($availableSpace->value)),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Cluster Runway : ".rkColorOutput(json_decode(getRubrikRunway($clusterConnect))->days." day(s)"),$padSize," ",STR_PAD_RIGHT)." |\n");
-	
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	print("| ".str_pad("Snapshots Ingested : ".rkColorOutput($snapshots["Ingested"]),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Logical Snapshots size : ".rkColorOutput($snapshots["Logical"]),$padSize," ",STR_PAD_RIGHT)." |\n");
@@ -151,7 +150,7 @@
 			print("| ".str_pad("Message : ".rkColorOutput(json_decode($item->eventInfo)->message),$padSize," ",STR_PAD_RIGHT)." |\n");
 			print("| ".str_pad("-",$padSize-11," ",STR_PAD_RIGHT)." |\n");
 		}
+		print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	}
-	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 
 ?>
