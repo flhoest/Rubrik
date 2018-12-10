@@ -36,7 +36,33 @@ Before continuing you need to have some basic information about your environment
 ?>
 ```
 
-## Functions Documentation
+## Function's Reference
+
+The below section is a list of all existing functions in this framework.
+
+### Index
+
+	getRubrikClusterDetails($clusterConnect)
+	rkGetClusterVersion($clusterConnect)
+	getRubrikSLAs($clusterConnect)
+	getRubrikClusterID($clusterConnect)
+	getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	getRubrikTotalStorage($clusterConnect)
+	getRubrikRunway($clusterConnect)
+	getRubrikNodeCount($clusterConnect)
+	rkGetMSSQL($clusterConnect)
+	rkGetSpecificMSSQL($clusterConnect,$sqlID)
+	rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
+	getRubrikSLAname($clusterConnect,$SLAid)
+	rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
+	rkGetEpoch($dateString)
+	rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	rkColorOutput($string)
+	rkColorRed($string)
+	formatBytes($bytes, $decimals = 2, $system = 'metric')	
+
+### Explanation
 
 > _getRubrikClusterDetails($clusterConnect)_
 
@@ -677,9 +703,10 @@ The first version of this framework has been published the 23rd of Nov 2018 as v
 
 ## Todo List
 
-- [ ] Cleanup the naming convention of the functions
-- [ ] Add more functions (about other environments like AHV, vmware, ...)
-- [ ] Add more contols on error
+- [ ] Cleanup the naming convention of the functions;
+- [ ] Add more functions (about other environments like AHV, vmware, ...);
+- [ ] Add more contols on error;
+- [ ] Provide usable documentation to the masses
 
 ## Authors
 
