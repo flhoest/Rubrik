@@ -13,7 +13,7 @@ This project's goal is to provide anyone who needs to script automation, a colle
 
 In order to make a good use of the provided framework, you first need to have php-cli installed. This is very easy and a lot of documentation on how to set it up on various platform (Windows, Linux & Mac OS) is widely available. The most common way to deploy php-cli is using your prefered package manager. Within the Linux world, just use : 
 ```
-yum install php-cli -y.
+yum install php-cli -y
 ````
 
 ## File Listing
@@ -32,7 +32,6 @@ Before continuing you need to have some basic information about your environment
 		"password" => "password",
 		"ip" => "0.0.0.0"
 	);
-
 ?>
 ```
 
