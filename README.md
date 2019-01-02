@@ -7,7 +7,7 @@ This documentation is under review and considered as draft!
 
 ## Background
 
-This project's goal is to provide anyone who needs to script automation, a collection of functions that call Rubrik's APIs. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering out of the box.
+This project's goal is to provide anyone who needs to script automation, a collection of functions that call Rubrik's APIs. I was facing some challenges around MS SQL DR and I had to start writing some functions to make a good use of what Rubrik is offering out of the box. I have tested this framework with Rubrik CDM release 4.2 and 5.0. So far, so good ;)
 
 ## Getting Started
 
