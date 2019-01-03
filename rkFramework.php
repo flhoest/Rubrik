@@ -29,7 +29,7 @@
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
 	// getRubrikSLAname($clusterConnect,$SLAid)
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
+	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=true)	
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkColorOutput($string)
@@ -426,9 +426,24 @@
 	// Restore MS SQL DB at a given time
 	// ---------------------------------------------------------------------------
 	
-	function rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath)
+	function rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
 	{
 		$path=addslashes($dbFilePath);
+
+		// Since Andes - CDM v 5.x - target DB overwrite is possible.
+		// I CDM version >= 5.x and $overwrite=true -> overwrite will be initiated
+		$cdmver=rkGetClusterVersion($clusterConnect);
+		
+		if($cdmver[0]>="5")
+		{
+			// Ok to use $overwrite content
+			$v5=true;
+		}
+		else
+		{
+			// $overwrite will be ignored
+			$v5=false;
+		}
 		
 		// Get original logicalName
 
@@ -450,30 +465,59 @@
 				$logicalName=$tSQL[$i]->name;
 			}
 		}
-				
-		$config_params=
-		"{
-			\"recoveryPoint\": 
-			{
-				\"timestampMs\": ".$timeStamp."
-  			},
-  			\"targetInstanceId\": \"".$dbTargetInstanceID."\",
-  			\"targetDatabaseName\": \"".$dbTargetName."\",
-  			\"targetFilePaths\": 
-  			[
-    			{
-      				\"logicalName\": \"".$logicalName1."\",
-      				\"exportPath\": \"".$path."\"
-    			},
-    			{
-      				\"logicalName\": \"".$logicalName2."\",
-      				\"exportPath\": \"".$path."\"
-    			}
-  			],
-  			\"finishRecovery\": true,
-  			\"maxDataStreams\": 4
-		}";
-
+		
+		if($v5)
+		{
+			$overwrite=var_export($overwrite,true);
+			$config_params=
+			"{
+				\"recoveryPoint\": 
+				{
+					\"timestampMs\": ".$timeStamp."
+				},
+				\"targetInstanceId\": \"".$dbTargetInstanceID."\",
+				\"targetDatabaseName\": \"".$dbTargetName."\",
+				\"targetFilePaths\": 
+				[
+					{
+						\"logicalName\": \"".$logicalName1."\",
+						\"exportPath\": \"".$path."\"
+					},
+					{
+						\"logicalName\": \"".$logicalName2."\",
+						\"exportPath\": \"".$path."\"
+					}
+				],
+				\"finishRecovery\": true,
+				\"maxDataStreams\": 4,
+				\"allowOverwrite\": ".$overwrite."
+			}";
+		}
+		else
+		{
+			$config_params=
+			"{
+				\"recoveryPoint\": 
+				{
+					\"timestampMs\": ".$timeStamp."
+				},
+				\"targetInstanceId\": \"".$dbTargetInstanceID."\",
+				\"targetDatabaseName\": \"".$dbTargetName."\",
+				\"targetFilePaths\": 
+				[
+					{
+						\"logicalName\": \"".$logicalName1."\",
+						\"exportPath\": \"".$path."\"
+					},
+					{
+						\"logicalName\": \"".$logicalName2."\",
+						\"exportPath\": \"".$path."\"
+					}
+				],
+				\"finishRecovery\": true,
+				\"maxDataStreams\": 4
+			}";
+		}
 		$API="/api/v1/mssql/db/".urlencode($dbSourceID)."/export";
 
 		$curl = curl_init();
