@@ -54,7 +54,7 @@ The below section is a list of all existing functions in this framework.
 	rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
 	getRubrikSLAname($clusterConnect,$SLAid)
 	rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
+	rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)	
 	rkGetEpoch($dateString)
 	rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	rkColorOutput($string)
@@ -565,7 +565,7 @@ Gold
 
 > _rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)_
 
-> _rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)_
+> _rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)_
 
 > _rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)_
 
