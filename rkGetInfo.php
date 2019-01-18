@@ -1,10 +1,9 @@
 #!/usr/bin/php 
 
 <?php
-
 	//////////////////////////////////////////////////////////////////////////////
-	//               Rubrik Php Information - rkGetInfo.php v 1.1               //
-	//                        (c) 2018 - F. Lhoest                              //
+	//               Rubrik Php Information - rkGetInfo.php v 1.2               //
+	//                        (c) 2019 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
 	/*				__________        ___.            .__  __    
@@ -21,14 +20,14 @@
 	// simpler than you may think once those functions have been removed.
 	// The whole purpose of this is to get quick information on the target cluster.
 
-	include_once "credentials.php";
+	include_once "rkCredentials.php";
 	include_once "rkFramework.php";
 
 	// Define width of the screen (output)
 	$padSize=140;
 	
 	// Do you want to display the last backup event from the cluster ?
-	$displayEvents=TRUE;
+	$displayEvents=true;
 
 	// Number of events to retieve from the cluster
 	$lastEventCount=5;
@@ -36,6 +35,15 @@
 	// ===========================================================================
 	// Main entry point
 	// ===========================================================================
+
+	// Check if cluster can be queried
+	
+	$access=rkCheckAccess($clusterConnect);
+	if($access!="ok")
+	{
+		print("Cannot connect to cluster!\n");
+		print(rkColorRed($access)."\n");
+	}
 
 	// Basic info section
 	
@@ -140,7 +148,7 @@
 
 	if($displayEvents)
 	{
-		print("| ".str_pad("Last backup ".$lastEventCount." events",$padSize-11," ",STR_PAD_RIGHT)." |\n");
+		print("| ".str_pad("Last ".rkColorOutput($lastEventCount)." backup events",$padSize-11," ",STR_PAD_RIGHT)." |\n");
 		print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 		$events=json_decode(getRubrikEvents($clusterConnect,$lastEventCount,"Backup","",""));
 	
