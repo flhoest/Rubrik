@@ -1,8 +1,8 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.85                      //
-	//                        (c) 2018 - F. Lhoest                              //
+	//                   Rubrik Php Framework version 0.9                       //
+	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
 	/*				__________        ___.            .__  __    
@@ -17,6 +17,7 @@
 	// --------------
 	
 	// getRubrikClusterDetails($clusterConnect)
+	// rkCheckAccess($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
@@ -29,7 +30,7 @@
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
 	// getRubrikSLAname($clusterConnect,$SLAid)
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=true)	
+	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
 	// rkGetEpoch($dateString)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkColorOutput($string)
@@ -55,10 +56,43 @@
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($curl);
 		curl_close($curl);
-
 		return $result;
 	}
+
+	// ---------------------------------------------------------------------------
+	// Function to check if you have sufficient rights or correct credentials to connect
+	// ---------------------------------------------------------------------------
 	
+	function rkCheckAccess($clusterConnect)
+	{
+		$API="/api/v1/cluster/me";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		if($result=="The request was a legal request, but the server is refusing to respond to it.")
+		{
+			return("right_error");
+		}
+		if(strpos($result,"\"message\":\"Incorrect username/password\""))
+		{
+			return("credentials_error");
+		}
+		if(strpos($result,"apiVersion"))
+		{
+			return("ok");
+		}
+	}
+
 	// --------------------------------------------------
 	// Function to get the running version on the cluster
 	// --------------------------------------------------
@@ -538,6 +572,56 @@
 	}
 	
 	// ---------------------------------------------------------------------------
+	// Get recovery status of specified object, returns status, info and time and
+	// if not completed, the progress in %age
+	// ---------------------------------------------------------------------------
+
+	function rkGetRecoveryStatus($clusterConnect,$object,$jobID)
+	{
+		$API="/api/internal/event?&event_type=Recovery&object_name=".$object."&show_only_latest=true";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+
+		// Match associated $jobID
+		foreach ($result as $item) 
+		{
+			if($item->jobInstanceId==$jobID)
+			{
+				$res["time"]=$item->time;
+				if(isset($item->eventProgress))
+				{
+					$res["progress"]=$item->eventProgress;
+// 					$res["time"]=$item->time;
+				}
+		
+				$res["status"]=$result[0]->eventStatus;
+				$res["info"]=$result[0]->eventInfo;
+				
+				break;
+			}
+			else
+			{
+				$res["time"]="Mon Jan 14 12:00:00 UTC 2019";
+				$res["status"]="error - not found !";
+				$res["info"]="error - not found !";
+			}
+		}
+		return $res;
+	}
+		
+	// ---------------------------------------------------------------------------
 	// Convert Rubrik human readable time to EPOCH time used in APIs
 	// ---------------------------------------------------------------------------
 	
@@ -628,7 +712,6 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-// 		$logicalSize=formatBytes(json_decode($result)->logicalBytes,2,"binary");
 		return(json_decode($result)->logicalBytes);
 		
  	}
