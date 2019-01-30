@@ -25,7 +25,7 @@ yum install php-cli -y
 
 Before continuing you need to have some basic information about your environment like Rubrik credentials and IP/Hostname. Once you have them, simply create a file called credentials.php and set the following variable : 
 
-``` 
+```php 
 <?php
 	$clusterConnect=array(
 		"username" => "username",
@@ -71,7 +71,7 @@ This function returns basic detais about the cluster
   - Output : a json decodable string with all the relevant Rubrik cluster details.
   - Usage sample : 
   
-```
+```php
 $cluster=getRubrikClusterDetails($clusterConnect)
 var_dump($cluster)
 ```
@@ -99,7 +99,7 @@ The above will display :
   - Input : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a string with the running version installed on the cluster.
   - Usage sample : 
-```
+```php
 var_dump(rkGetClusterVersion($clusterConnect));
 ```
 
@@ -117,7 +117,7 @@ This function returns details about configured SLAs in the cluster.
   - Output : a json string with all details regarding SLA
   - Usage sample : 
   
-```
+```php
 $SLA=json_decode(getRubrikSLAs($clusterConnect));
 var_dump($SLA);
 ```
@@ -203,7 +203,7 @@ object(stdClass)#4 (3) {
   - Output : a json string with 
   - Usage sample : 
   
-```
+```php
 var_dump(getRubrikClusterID($clusterConnect));
 ```
 
@@ -222,7 +222,7 @@ string(36) "25c3c362-8b42-4b1c-128f-63e03cec349a"
     - $objectName -> a string containing a search filter within the event. Can be whatever.
   - Output : a json string with all details regarding SLA
   - Usage sample : 
-```
+```php
 $events=json_decode(getRubrikEvents($clusterConnect,$lastEventCount,"Backup","",""));
 	
 foreach ($events->data as $item) 
@@ -252,7 +252,7 @@ Message : Initializing SQL Server full backup for 192.168.34.10\MSSQLSERVER\Test
   - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : an Integer with the total capacity of the Rubrik cluster
   - Usage sample : 
-```
+```php
 var_dump(json_decode(getRubrikTotalStorage($clusterConnect))->bytes);
 ```
 
@@ -274,7 +274,7 @@ string(7) "5.45 TB"
   - Output : an Integer representing the number of days the cluster will continue to perform backups without the need to add more storage. This value is important for capacity planning.
   - Usage sample : 
   
-  ```
+  ```php
   var_dump(json_decode(getRubrikRunway($clusterConnect))->days);
   ```
 
@@ -290,7 +290,7 @@ int(263)
   - Output : an Integer with the number of physical node in the cluster. Always return `1`for Rubrik EDGE appliances.
   - Usage sample : 
   
-```
+```php
 var_dump(json_decode(getRubrikNodeCount($clusterConnect))->total);
 ```
 
@@ -306,7 +306,7 @@ int(1)
   - Output : a json string with all information related to MS SQL DB configured in the Rubrik cluster (protected or not).
   - Usage smaple : 
 
-```
+```php
 $msSQL=json_decode(rkGetMSSQL($clusterConnect))->data;
 var_dump($msSQL);
 ```
@@ -411,7 +411,7 @@ array(66) {
     - `$sqlID` -> SQL ID of the MS SQL database we are getting details from
   - Output : a jason sting containing all details about the Database
   - Usage sample : 
-```
+```php
 $id=rkGetMSSQLid($clusterConnect,"MyDB","192.168.1.1");
 var_dump(json_decode(rkGetSpecificMSSQL($clusterConnect,$id)));
 ```
@@ -532,7 +532,7 @@ object(stdClass)#282 (33) {
     - `$dbHost` -> string containing the name of the host where the DB is sitting 
   - Output : string with the corresponding database ID
   - Usage sample : 
-```
+```php
 $id=rkGetMSSQLid($clusterConnect,"MyDB","192.168.1.1");
 var_dump($id);
 ```
@@ -549,7 +549,7 @@ string(52) "MssqlDatabase:::ade1f958-8edc-4953-9d43-97a591b2ad3b"
     - `$SLAid` -> string containing the SLA ID
   - Output : string with the corresponding SLA name
   - Usage sample : 
-  ```
+```php
 $SLA=json_decode(getRubrikSLAs($clusterConnect));
 foreach ($SLA->data as $item) 
 {
@@ -574,7 +574,7 @@ Gold
   - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with all information related to the status of the support tunnel.
   - Usage sample : 
-```	
+```php	
 $supportTunnel=json_decode(rkGetSupportTunnel($clusterConnect));
 var_dump($supportTunnel);
 ```
@@ -625,7 +625,7 @@ object(stdClass)#34 (3) {
   - Inputs : `$ClusterConnect` -> array containing connection detail to the Rubrik cluster.
   - Output : a json string with all information related to _Unmanaged objects_.
   - Usage sample : 
-```
+```php
 $unmanaged=json_decode(rkGetUnmanaged($clusterConnect));
 	
 foreach ($unmanaged->data as $item) 
@@ -682,7 +682,7 @@ This could be usefull to get the potential savings on a cluster. Indeed, those o
 - Inputs : an integer representing a size in bytes
 - Output : a human readable size ineither KB, MB, GB, TB. There is the choice to round the metric way (power of 10) or the binary way (power of 2)
 - Usage sample :
-```
+```php
 	var_dump(formatBytes(64647383746));
 	var_dump(formatBytes(64647383));
 	var_dump(formatBytes(64647));
@@ -702,7 +702,7 @@ The first version of this framework has been published the 23rd of Nov 2018 as v
 
 ## Todo List
 
-- [ ] Cleanup the naming convention of the functions;
+- [X] Cleanup the naming convention of the functions;
 - [ ] Add more functions (about other environments like AHV, vmware, ...);
 - [ ] Add more contols on error;
 - [ ] Provide usable documentation to the masses
