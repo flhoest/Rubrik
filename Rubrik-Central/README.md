@@ -6,7 +6,10 @@ Rubrik Central is a portal that provides easy view on each clusters in an organi
 
 ## At a glance
 
-It gives an overview of all your running cluster in an easy and simple way.
+Rubrik Central provides an overview of all your running cluster in an easy and simple way. All the key items are displayed in an easy click and go interface all based on the famous [Bootstrap CSS library](https://getbootstrap.com/).
+
+_The following functions are available :_
+
 * Global info like
   - running version;
   - number of nodes;
