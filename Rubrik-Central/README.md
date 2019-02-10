@@ -84,11 +84,16 @@ This is the list of functions required to runthe API calls. Located [here](https
 
 ## Recommanded structure
 
+```
 /
 index.php -> rkCentral.php
 rkCentral.php
 includes/
-
+	rkFramework.php
+	rkClusters.php
+	rubrik.ico
+	logo.png
+```
 
 ```
  more to come, stay tuned !
