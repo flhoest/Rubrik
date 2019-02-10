@@ -78,6 +78,18 @@ Is is composed of an array with the various parameters that allow accessing the 
 
 This file is the main file, you can create a symlink to it called index.php 
 
+- rkFramework.php
+
+This is the list of functions required to runthe API calls. Located [here](https://github.com/flhoest/Rubrik/blob/master/rkFramework.php).
+
+## Recommanded structure
+
+/
+index.php -> rkCentral.php
+rkCentral.php
+includes/
+
+
 ```
  more to come, stay tuned !
 ```
