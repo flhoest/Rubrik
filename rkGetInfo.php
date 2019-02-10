@@ -47,7 +47,7 @@
 
 	// Basic info section
 	
-	$cluster=json_decode(getRubrikClusterDetails($clusterConnect));
+	$cluster=json_decode(rkGetClusterDetails($clusterConnect));
 	$SLA=json_decode(getRubrikSLAs($clusterConnect));
 	$snapshots=rkGetAllSnapshotInfo($clusterConnect);
 
