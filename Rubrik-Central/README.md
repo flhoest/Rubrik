@@ -1,6 +1,6 @@
 # Rubrik Central
 ## Introduction
-Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central. This is not linked to [Rubrik Inc.](www.rubrik.com) in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their [Polaris](https://www.rubrik.com/product/polaris-overview/) SaaS offering, but I found two issues - from my own point of view : 
+Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central. This is not linked to [Rubrik Inc.](http://www.rubrik.com) in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their [Polaris](https://www.rubrik.com/product/polaris-overview/) SaaS offering, but I found two issues - from my own point of view : 
 * Polaris requires cloud account and separate license;
 * Polaris is much more than only providing global view (currently not a requirement in our actual deployment)
 
@@ -10,36 +10,36 @@ Rubrik Central provides an overview of all your running cluster in an easy and s
 
 _The following functions are available :_
 
-* Global info like
+* Global info
   - running version;
   - number of nodes;
   - available storage
 * Basic info
-  - Cluster name;
+  - cluster name;
   - location;
   - time zone;
   - support tunnel status (and port)
 * Storage info
-  - Total storage;
-  - Available storage;
+  - total storage;
+  - available storage;
   - %age used;
-  - Runway;
-  - Number of snapshots
+  - runway;
+  - number of snapshots
 * SLA
-  - Name;
-  - Frequencies and retentions;
-  - Number of objects;
-  - Drill down to the object level inside SLA
+  - name;
+  - frequencies and retentions;
+  - number of objects;
+  - drill down to the object level inside SLA
 * Unmanaged objects
-  - Object name;
-  - Object Type;
-  - Status;
-  - Size;
-  - Source
-  - Ability to delete specific unmanaged objects 
+  - object name;
+  - object Type;
+  - status;
+  - size;
+  - source
+  - ability to delete specific unmanaged objects 
 * Last x backup events
 
-## It is composed of 3 files : 
+## It is composed of 3 main files : 
 
 - rkClusters.php
 
@@ -82,7 +82,7 @@ This file is the main file, you can create a symlink to it called index.php
 
 This is the list of functions required to runthe API calls. Located [here](https://github.com/flhoest/Rubrik/blob/master/rkFramework.php).
 
-## Recommanded structure
+## Folder Structure
 
 ```
 /
@@ -96,5 +96,5 @@ includes/
 ```
 
 ```
- more to come, stay tuned !
+ more to come, stay tuned ! I'm almost ready to ship the code to the masses ;)
 ```
