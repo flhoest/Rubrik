@@ -4,20 +4,20 @@ Rubrik Central is a portal that provides easy view on each clusters in an organi
 
 It gives an overview of all your running cluster in an easy and simple way.
 * Global info like
- - running version
- - number of nodes
- - available storage
+  - running version
+  - number of nodes
+  - available storage
 * Basic info
- - Cluster name
- - location
- - time zone
- - support tunnel status (and port)
+  - Cluster name
+  - location
+  - time zone
+  - support tunnel status (and port)
 * Storage info
- - Total storage
- - Available storage
- - %age used
- - Runway
- - Number of snapshots
+  - Total storage
+  - Available storage
+  - %age used
+  - Runway
+  - Number of snapshots
 * SLA
  - Name
  - Frequencies and retentions
