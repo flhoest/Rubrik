@@ -1,7 +1,7 @@
 # Rubrik Central
 ## Introduction
-Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central.This is not link to Rubrik Inc. in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their Polaris SaaS offering, but I found two issues - from my own point of view : 
-* Polaris requires cloud account and separate license
+Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central.This is not link to Rubrik Inc. in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their [Polaris](https://www.rubrik.com/product/polaris-overview/) SaaS offering, but I found two issues - from my own point of view : 
+* Polaris requires cloud account and separate license;
 * Polaris is much more than only providing global view (currently not a requirement in our actual deployment)
 
 ## At a glance
@@ -39,9 +39,41 @@ It gives an overview of all your running cluster in an easy and simple way.
 ## It is composed of 3 files : 
 
 - rkClusters.php
-````rkLogin.php
+
+This file is a definition of your various Rubrik clusters, either virtual or physical.
+
+```php
+<?php
+
+	$clusterConnect=array(
+			0 => array(
+				"cluster" => "Cluster 1",
+				"username" => "username",
+				"password" => "password",
+				"ip" => "192.168.1.1"
+			),
+			1 => array(
+				"cluster" => "Cluster 2",
+				"username" => "username",
+				"password" => "password",
+				"ip" => "192.168.1.2"
+			),
+			2 => array(
+				"cluster" => "Cluster 3",
+				"username" => "username",
+				"password" => "password",
+				"ip" => "192.168.1.3"
+			)
+		);
+
+?>
+```
+
+Is is composed of an array with the various parameters that allow accessing the clusters you need to display in the portal itself.
+
 - rkRubrikCentral.php
 
+This file is the main file, you can create a symlink to it called index.php 
 
 ```
  more to come, stay tuned !
