@@ -1,6 +1,6 @@
 # Rubrik Central
 ## Introduction
-Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central.This is not link to Rubrik Inc. in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their [Polaris](https://www.rubrik.com/product/polaris-overview/) SaaS offering, but I found two issues - from my own point of view : 
+Rubrik Central is a portal that provides easy view on each clusters in an organisation. If you are Nutanix customer, this is the same philosophy as Prism Central. This is not linked to [Rubrik Inc.](www.rubrik.com) in any ways, this is purely my own code using Rubrik Rest-API's framework. There is a lot of possibilities our of the box, this is only a matter of putting things together. Since our second Rubrik cluster implementation I new that a portal showing a global view of our deployment wille a nice to have. Rubrik provides this feature with their [Polaris](https://www.rubrik.com/product/polaris-overview/) SaaS offering, but I found two issues - from my own point of view : 
 * Polaris requires cloud account and separate license;
 * Polaris is much more than only providing global view (currently not a requirement in our actual deployment)
 
