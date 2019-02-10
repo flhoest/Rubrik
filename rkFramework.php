@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.9                       //
+	//                   Rubrik Php Framework version 0.95                      //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -16,32 +16,45 @@
 	// Function Index
 	// --------------
 	
-	// getRubrikClusterDetails($clusterConnect)
+	// rkGetClusterDetails($clusterConnect)
 	// rkCheckAccess($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 	// getRubrikTotalStorage($clusterConnect)
+	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikRunway($clusterConnect)
 	// getRubrikNodeCount($clusterConnect)
 	// rkGetMSSQL($clusterConnect)
+	// rkGetWindowsFilesets($clusterConnect)
+	// rkGetNutanixVM($clusterConnect)
+	// rkGetGetvmwareVM($clusterConnect)
 	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
+	// rkGetMSSQLInstanceID($clusterConnect)
 	// getRubrikSLAname($clusterConnect,$SLAid)
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
+	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetEpoch($dateString)
+	// rkGetEpochToSQL($EpochTime)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetHostID($clusterConnect,$hostName)
+	// rkRefreshHost($clusterConnect,$hostName)
+	// rkGetSupportTunnel($clusterConnect)
+	// rkGetAllSnapshotInfo($clusterConnect)
+	// rkGetUnmanaged($clusterConnect)
+	// rkDeleteUnmanaged($clusterConnect,$ObjID)
+	// rkGetSnapshotCount($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
 	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
-
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
 	
-	function getRubrikClusterDetails($clusterConnect)
+	function rkGetClusterDetails($clusterConnect)
 	{
 		$API="/api/v1/cluster/me";
 
@@ -93,6 +106,7 @@
 		}
 	}
 
+	
 	// --------------------------------------------------
 	// Function to get the running version on the cluster
 	// --------------------------------------------------
@@ -113,7 +127,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return(json_decode($result)->version);
+		return json_decode($result)->version;
 	}
 		
 	// ----------------------------------------------------------------------------
@@ -239,7 +253,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result)->value;
 	}
 	
 	// ---------------------------------------------------
@@ -262,7 +276,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result)->days;
 	}
 		
 	// ---------------------------------------------------
@@ -285,7 +299,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result)->total;
 	}
 
 	// ---------------------------------------------------
@@ -295,6 +309,75 @@
 	function rkGetMSSQL($clusterConnect)
 	{
 		$API="/api/v1/mssql/db";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+	
+	// ---------------------------------------------------
+	// Function who returns all Windows FileSets
+	// ---------------------------------------------------
+
+	function rkGetWindowsFilesets($clusterConnect)
+	{
+		$API="/api/internal/host_fileset?operating_system_type=Windows";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+
+	// ---------------------------------------------------
+	// Function who returns all Nutanix VMs
+	// ---------------------------------------------------
+
+	function rkGetNutanixVM($clusterConnect)
+	{
+		$API="/api/internal/nutanix/vm";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+	
+	// ---------------------------------------------------
+	// Function who returns all vmware VMs
+	// ---------------------------------------------------
+
+	function rkGetvmwareVM($clusterConnect)
+	{
+		$API="/api/v1/vmware/vm";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -593,6 +676,8 @@
 		curl_close($curl);
 		
 		$result=json_decode($result)->data;
+		var_dump($result);
+		var_dump($object);
 
 		// Match associated $jobID
 		foreach ($result as $item) 
@@ -603,12 +688,12 @@
 				if(isset($item->eventProgress))
 				{
 					$res["progress"]=$item->eventProgress;
-// 					$res["time"]=$item->time;
 				}
 		
 				$res["status"]=$result[0]->eventStatus;
 				$res["info"]=$result[0]->eventInfo;
 				
+				//Not clean, I know ... looking for other solution
 				break;
 			}
 			else
@@ -883,6 +968,41 @@
 		if(isset($result)) return $result;
 		else return(FALSE);
 		
+ 	}
+
+	// ---------------------------------------------------------------------------
+	// Delete specific unmanaged snapshot
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkDeleteUnmanaged($clusterConnect,$ObjID)
+ 	{
+		$API="/api/internal/unmanaged_object/snapshot/bulk_delete";
+		$config_params="
+		{
+  			\"objectDefinitions\": [
+    					{
+      						\"objectId\": \"".$ObjID."\"
+    					}
+  			]
+		}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);
+
+		return $result;
+ 	
  	}
 
 	// ---------------------------------------------------------------------------
