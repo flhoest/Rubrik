@@ -39,7 +39,9 @@ _The following functions are available :_
   - ability to delete specific unmanaged objects 
 * Last x backup events
 
-## It is composed of 3 main files : 
+## Application structure
+
+It is composed of 3 main files : 
 
 - rkClusters.php
 
