@@ -117,6 +117,8 @@ includes/
 
 > Note : platform running the script must have access to Internet to fetch the various CSS and JS provided in the html <head> section. You can remove this constraint by downloading the CSS and JS. Full URL are in the main code.
 	
+> Note 2 : Supporting blog post is [here](https://flhoest.blogspot.com/2019/02/php-welcome-to-rubrik-central.html).
+	
 ```
 Please note that the delete function for unamanaged objects does not work - for now !
 ```
