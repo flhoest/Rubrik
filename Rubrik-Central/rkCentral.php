@@ -24,7 +24,7 @@
 	$favicon="includes/rubrik.ico";
 	
 	// Specify Company logo
-	$logo="includes/company.jpg";
+	$logo="includes/company.png";
 	
 	// Applicatioin main title
 	$appTitle="Clusters Overview";
