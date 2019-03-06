@@ -40,7 +40,7 @@ Before continuing you need to have some basic information about your environment
 The below section is a list of all existing functions in this framework.
 
 ### Index
-
+````
 rkGetClusterDetails($clusterConnect)
 rkCheckAccess($clusterConnect)
 rkGetFileSet($clusterConnect)
@@ -83,6 +83,7 @@ rkGetSnapshotCount($clusterConnect)
 rkColorOutput($string)
 rkColorRed($string)
 rkFormatBytes($bytes,$decimals=2,$system='metric')
+````
 
 ### Explanation
 
