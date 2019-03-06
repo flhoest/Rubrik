@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.95                      //
+	//                   Rubrik Php Framework version 0.98                      //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -10,46 +10,55 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/	
+							\/             \/                  \/	
 	*/
 	
 	// Function Index
 	// --------------
 	
-	// rkGetClusterDetails($clusterConnect)
-	// rkCheckAccess($clusterConnect)
-	// rkGetClusterVersion($clusterConnect)
-	// getRubrikSLAs($clusterConnect)
-	// getRubrikClusterID($clusterConnect)
-	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
-	// getRubrikTotalStorage($clusterConnect)
-	// getRubrikAvailableStorage($clusterConnect)
-	// getRubrikRunway($clusterConnect)
-	// getRubrikNodeCount($clusterConnect)
-	// rkGetMSSQL($clusterConnect)
-	// rkGetWindowsFilesets($clusterConnect)
-	// rkGetNutanixVM($clusterConnect)
-	// rkGetGetvmwareVM($clusterConnect)
-	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
-	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)	
-	// rkGetMSSQLInstanceID($clusterConnect)
-	// getRubrikSLAname($clusterConnect,$SLAid)
-	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstance,$dbTargetName,$timeStamp,$dbFilePath)	
-	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
-	// rkGetEpoch($dateString)
-	// rkGetEpochToSQL($EpochTime)
-	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
-	// rkGetHostID($clusterConnect,$hostName)
-	// rkRefreshHost($clusterConnect,$hostName)
-	// rkGetSupportTunnel($clusterConnect)
-	// rkGetAllSnapshotInfo($clusterConnect)
-	// rkGetUnmanaged($clusterConnect)
-	// rkDeleteUnmanaged($clusterConnect,$ObjID)
-	// rkGetSnapshotCount($clusterConnect)
-	// rkColorOutput($string)
-	// rkColorRed($string)
-	// formatBytes($bytes, $decimals = 2, $system = 'metric')	
+	// 	rkGetClusterDetails($clusterConnect)
+	// 	rkCheckAccess($clusterConnect)
+	// 	rkGetFileSet($clusterConnect)
+	// 	rkFileSetBackup($clusterConnect,$filesetId)
+	// 	rkGetClusterVersion($clusterConnect)
+	// 	getRubrikSLAs($clusterConnect)
+	// 	getRubrikClusterID($clusterConnect)
+	// 	getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	// 	rkGetObjectStatus($clusterConnect,$objectName)
+	// 	getRubrikTotalStorage($clusterConnect)
+	// 	getRubrikAvailableStorage($clusterConnect)
+	// 	getRubrikRunway($clusterConnect)
+	// 	getRubrikNodeCount($clusterConnect)
+	// 	rkGetMSSQL($clusterConnect)
+	// 	rkGetWindowsFilesets($clusterConnect)
+	// 	rkGetNutanixVM($clusterConnect)
+	// 	rkGetvmwareVM($clusterConnect)
+	// 	rkGetHypervVM($clusterConnect)
+	// 	rkGetSpecificMSSQL($clusterConnect,$sqlID)
+	// 	rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
+	// 	rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
+	// 	getRubrikSLAname($clusterConnect,$SLAid)
+	// 	rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	// 	rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
+	// 	rkGetRecoveryStatus($clusterConnect,$object,$jobID)
+	// 	rkGetSupportToken($clusterConnect)
+	// 	rkGetEpoch($dateString)
+	// 	rkGetTimeStamp($dateString)
+	// 	rkEpochToSQL($EpochTime)
+	// 	rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// 	rkGetHostID($clusterConnect,$hostName)
+	// 	rkRefreshHost($clusterConnect,$hostName)
+	// 	rkGetAgentConnectivity($clusterConnect,$hostName)
+	// 	rkGetSupportTunnel($clusterConnect)
+	// 	rkGetAllSnapshotInfo($clusterConnect)
+	// 	rkGetUnmanaged($clusterConnect)
+	// 	rkDeleteUnmanaged($clusterConnect,$ObjID)
+	// 	rkGetFailedAmount($clusterConnect,$objectName)
+	// 	rkGetSnapshotCount($clusterConnect)
+	// 	rkColorOutput($string)
+	// 	rkColorRed($string)
+	// 	rkFormatBytes($bytes,$decimals=2,$system='metric')	
+
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -104,8 +113,57 @@
 		{
 			return("ok");
 		}
+		else return ("Unable to connect");
 	}
 
+	// --------------------------------------------------
+	// Function to get defined filesets in the cluster
+	// --------------------------------------------------
+	
+	function rkGetFileSet($clusterConnect)
+	{
+		$API="/api/v1/fileset";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+	
+	// --------------------------------------------------
+	// Function to initiate a fileset protection
+	// --------------------------------------------------
+	
+	function rkFileSetBackup($clusterConnect,$filesetId)
+	{
+		$API="/api/v1/fileset/".urlencode($filesetId)."/snapshot";
+				
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return(json_decode($result));
+	
+	}
 	
 	// --------------------------------------------------
 	// Function to get the running version on the cluster
@@ -136,7 +194,11 @@
 
 	function getRubrikSLAs($clusterConnect)
 	{
-		$API="/api/v1/sla_domain?sort_order=asc";
+		// Check if cluster is running v 5.0.0-p1-827 in this case, need to invoke api v2 call
+		$ver=rkGetClusterVersion($clusterConnect);
+
+		if($ver=="5.0.0-p1-827") $API="/api/v2/sla_domain?sort_order=asc";
+		else $API="/api/v1/sla_domain?sort_order=asc";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -194,6 +256,30 @@
 
 		if($objectType!="") $API=$API."&object_type=".$objectType;
 		if($objectName!="") $API=$API."&object_name=".$objectName;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+
+	// -----------------------------------------------
+	// Function who returns backup status of an object
+	// -----------------------------------------------
+	
+	function rkGetObjectStatus($clusterConnect,$objectName)
+	{
+	
+		$API="api/internal/event?limit=1&event_type=Backup&object_name=".$objectName;
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -299,7 +385,8 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return json_decode($result)->total;
+// 		$node_count=json_decode($result)->total;
+		return json_decode($result);
 	}
 
 	// ---------------------------------------------------
@@ -368,7 +455,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result);
 	}
 	
 	// ---------------------------------------------------
@@ -391,7 +478,30 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result);
+	}
+
+	// ---------------------------------------------------
+	// Function who returns all hyper-v VMs
+	// ---------------------------------------------------
+
+	function rkGetHypervVM($clusterConnect)
+	{
+		$API="/api/internal/hyperv/vm";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
 	}
 	
 	// ---------------------------------------------------
@@ -705,6 +815,31 @@
 		}
 		return $res;
 	}
+
+	// ---------------------------------------------------
+	// Function generating support token
+	// ---------------------------------------------------
+
+	function rkGetSupportToken($clusterConnect)
+	{
+		$API="/api/v1/session";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return(json_decode($result));
+	}
 		
 	// ---------------------------------------------------------------------------
 	// Convert Rubrik human readable time to EPOCH time used in APIs
@@ -855,6 +990,32 @@
 	}
 
 	// ---------------------------------------------------------------------------
+	// Return connected if the $hotName agent is reachable
+	// ---------------------------------------------------------------------------
+	
+	function rkGetAgentConnectivity($clusterConnect,$hostName)
+	{
+		if($hostName) $API="/api/internal/host/envoy?hostname=".$hostName;
+		else $API="/api/internal/host/envoy";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		if($hostName=="") return(json_decode($result));
+		else return(json_decode($result->data[0]->status));
+	}
+
+	// ---------------------------------------------------------------------------
 	// Get Status of the support tunnel
 	// ---------------------------------------------------------------------------
  
@@ -992,17 +1153,42 @@
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
 		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
 		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
 		curl_close($curl);
-
+		
 		return $result;
  	
+ 	}
+
+	// ---------------------------------------------------------
+	// Get number of failed backup event occurence for an object
+	// ---------------------------------------------------------
+ 
+ 	function rkGetFailedAmount($clusterConnect,$objectName)
+ 	{
+		$API="/api/internal/event?status=Failure&event_type=Backup&object_name=".urlencode($objectName)."&show_only_latest=true&filter_only_on_latest=true";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+		
  	}
 
 	// ---------------------------------------------------------------------------
@@ -1058,7 +1244,7 @@
 	// Display size (bytes) in human redable format
 	// ---------------------------------------------------------------------------
 	
-	function formatBytes($bytes, $decimals = 2, $system = 'metric')
+	function rkFormatBytes($bytes, $decimals = 2, $system = 'metric')
 	{
 		$mod = ($system === 'binary') ? 1024 : 1000;
 		$units = array(
