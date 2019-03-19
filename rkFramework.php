@@ -279,7 +279,7 @@
 	function rkGetObjectStatus($clusterConnect,$objectName)
 	{
 	
-		$API="api/internal/event?limit=1&event_type=Backup&object_name=".$objectName;
+		$API="/api/internal/event?&object_name=".$objectName."&show_only_latest=false&filter_only_on_latest=true&event_type=Backup";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -293,7 +293,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result);
 	}
 
 	// -------------------------------------------------------
@@ -390,6 +390,89 @@
 	}
 
 	// ---------------------------------------------------
+	// Function who returns all snapshots of a fileset
+	// ---------------------------------------------------
+
+	function rkGetFilesetSnaps($clusterConnect,$filesetID)
+	{
+		$API="/api/v1/fileset/".urlencode($filesetID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+
+	// ---------------------------------------------------------------
+	// Function who returns URL for downloading a file from a snapshot
+	// ---------------------------------------------------------------
+
+	function rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
+	{
+		// Step 1 - Generate URL
+
+		$API="/api/internal/fileset/snapshot/".$snapshotID."/download_files";
+		$config_params="
+		{
+			  \"sourceDirs\": [
+				\"".$fileName."\"
+			  ]
+		}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+
+		$id=$result->id;
+		
+		// Step 2 - Get generated URL from above id Generating URL takes few second, need to loop until SUCCEEDED
+		
+		$API="/api/v1/fileset/request/".urlencode($id);
+
+		$Stat="RUNNING";
+
+		while ($Stat!="SUCCEEDED")
+		{
+			sleep(1);
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+			$result = json_decode(curl_exec($curl));
+			curl_close($curl);
+			if($result->status=="SUCCEEDED") $Stat="SUCCEEDED";
+		}
+
+		return($result->links[1]->href);
+	}
+
+	// ---------------------------------------------------
 	// Function who returns all MS SQL object details
 	// ---------------------------------------------------
 
@@ -411,6 +494,53 @@
 
 		return $result;
 	}
+	
+	// ------------------------------------------------
+	// Function who returns list of unmanaged snapshots
+	// ------------------------------------------------
+
+	function rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	{
+		$API="/api/internal/unmanaged_object/".urlencode($ID)."/snapshot";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);	
+
+		return($result);
+	}
+
+	// ---------------------------------------------------
+	// Function who returns details for FileSets snapshots
+	// ---------------------------------------------------
+
+	function rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
+	{
+		$API="/api/v1/fileset/snapshot/".$ID."?verbose=true";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);	
+
+		return($result);
+	}
+	
 	
 	// ---------------------------------------------------
 	// Function who returns all Windows FileSets
@@ -851,6 +981,13 @@
 		return date_format($epoch,'U')."000";
 	}
 	
+	function rkGetEpoch2($dateString)
+	{
+		$epoch=DateTime::createFromFormat("D M d H:i:s e Y",$dateString);
+		return date_format($epoch,'U');
+	}
+
+
 	// ---------------------------------------------------------------------------
 	// Convert SQL human readable time to timestamp
 	// ---------------------------------------------------------------------------
@@ -1221,6 +1358,128 @@
 		} 
 		else return(FALSE);
  	}
+
+	// ------------------------------------------------------------------------------
+	// Keep last $keepAmount number of snapshot for $objName in the unmanaged section
+	// ------------------------------------------------------------------------------
+	
+	function rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
+	{
+		// Step 1 : Get object ID
+	
+		$API="/api/internal/unmanaged_object?search_value=".$objName;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl))->data[0]->id;
+		$objectID=$result;
+		curl_close($curl);	
+
+		// Step 2 : Get all associated snapshots
+		
+		$API="/api/internal/unmanaged_object/".urlencode($objectID)."/snapshot";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);	
+			
+		// Step 3 : identify snapshot ID of selected jobs
+		
+		$snapshots=array();
+		
+		for($i=0;$i<count($result->data);$i++)
+		{
+					$snapshots[$i]["date"]=$result->data[$i]->date;
+					$snapshots[$i]["id"]=$result->data[$i]->id;
+		}
+		
+		// Sort array to have them in chronological order
+		sort($snapshots);
+		
+		// Step 4 : select last 3. If snapshot count less or equal to 3 keep them all -> do nothing
+
+		$toDel=array();
+
+		for($i=0;($i<count($snapshots)) && (count($snapshots)-$i>$keepAmount);$i++)
+		{
+// 			print("Delete : ".$snapshots[$i]["id"]." - taken on : ".$snapshots[$i]["date"]."\n");
+			$toDel[]=$snapshots[$i]["id"];
+		}
+
+		// If we have items to delete, let's delete them
+
+		if(count($toDel))
+		{
+			// Step 4 : delete : api/internal/unmanaged_object/Fileset%3A%3A%3A0f41fdb9-2dbf-4d75-bfcd-98ad46a0514c/snapshot/bulk_delete
+			// If result = 204 : it worked !
+
+			$API="/api/internal/unmanaged_object/".urlencode($objectID)."/snapshot/bulk_delete";
+
+			if(count($toDel)==1)
+			{
+					$config_params="
+						{
+							\"snapshotIds\": [
+									\"".$toDel[0]."\"
+											]
+						}";
+			}
+			else
+			{
+					$config_params="
+						{
+							\"snapshotIds\": [";
+					for($i=0;$i<count($toDel)-1;$i++)
+					{
+						$config_params.=								"\"".$toDel[$i]."\",";
+					}
+					$config_params.="\"".$toDel[count($toDel)-1]."\"";
+					$config_params.="		
+								
+											]
+						}";
+			}
+
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_POST, 1);
+			curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+			$result = json_decode(curl_exec($curl));
+			$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+			curl_close($curl);
+
+			if($info==204) return TRUE;
+			else return FALSE;
+		}
+		else
+		{
+			// Nothing to del, just return "nothing to do"";
+			return "nothing to do";
+		}
+	}
 		
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
@@ -1239,7 +1498,7 @@
 	{
 		return ("\e[1;31m".$string."\033[0m");
 	}
-	
+		
 	// ---------------------------------------------------------------------------
 	// Display size (bytes) in human redable format
 	// ---------------------------------------------------------------------------
