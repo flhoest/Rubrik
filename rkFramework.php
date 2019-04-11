@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.98                      //
+	//                   Rubrik Php Framework version 0.99                      //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -15,49 +15,58 @@
 	
 	// Function Index
 	// --------------
-	
-	// 	rkGetClusterDetails($clusterConnect)
-	// 	rkCheckAccess($clusterConnect)
-	// 	rkGetFileSet($clusterConnect)
-	// 	rkFileSetBackup($clusterConnect,$filesetId)
-	// 	rkGetClusterVersion($clusterConnect)
-	// 	getRubrikSLAs($clusterConnect)
-	// 	getRubrikClusterID($clusterConnect)
-	// 	getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
-	// 	rkGetObjectStatus($clusterConnect,$objectName)
-	// 	getRubrikTotalStorage($clusterConnect)
-	// 	getRubrikAvailableStorage($clusterConnect)
-	// 	getRubrikRunway($clusterConnect)
-	// 	getRubrikNodeCount($clusterConnect)
-	// 	rkGetMSSQL($clusterConnect)
-	// 	rkGetWindowsFilesets($clusterConnect)
-	// 	rkGetNutanixVM($clusterConnect)
-	// 	rkGetvmwareVM($clusterConnect)
-	// 	rkGetHypervVM($clusterConnect)
-	// 	rkGetSpecificMSSQL($clusterConnect,$sqlID)
-	// 	rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
-	// 	rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
-	// 	getRubrikSLAname($clusterConnect,$SLAid)
-	// 	rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	// 	rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
-	// 	rkGetRecoveryStatus($clusterConnect,$object,$jobID)
-	// 	rkGetSupportToken($clusterConnect)
-	// 	rkGetEpoch($dateString)
-	// 	rkGetTimeStamp($dateString)
-	// 	rkEpochToSQL($EpochTime)
-	// 	rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
-	// 	rkGetHostID($clusterConnect,$hostName)
-	// 	rkRefreshHost($clusterConnect,$hostName)
-	// 	rkGetAgentConnectivity($clusterConnect,$hostName)
-	// 	rkGetSupportTunnel($clusterConnect)
-	// 	rkGetAllSnapshotInfo($clusterConnect)
-	// 	rkGetUnmanaged($clusterConnect)
-	// 	rkDeleteUnmanaged($clusterConnect,$ObjID)
-	// 	rkGetFailedAmount($clusterConnect,$objectName)
-	// 	rkGetSnapshotCount($clusterConnect)
-	// 	rkColorOutput($string)
-	// 	rkColorRed($string)
-	// 	rkFormatBytes($bytes,$decimals=2,$system='metric')	
+	// rkGetClusterDetails($clusterConnect)
+	// rkCheckAccess($clusterConnect)
+	// rkGetFileSet($clusterConnect)
+	// rkFileSetBackup($clusterConnect,$filesetId)
+	// rkGetClusterVersion($clusterConnect)
+	// getRubrikSLAs($clusterConnect)
+	// getRubrikClusterID($clusterConnect)
+	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	// rkGetObjectStatus($clusterConnect,$objectName)
+	// getRubrikTotalStorage($clusterConnect)
+	// getRubrikAvailableStorage($clusterConnect)
+	// getRubrikRunway($clusterConnect)
+	// getRubrikNodeCount($clusterConnect)
+	// rkGetFilesetSnaps($clusterConnect,$filesetID)
+	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
+	// rkGetMSSQL($clusterConnect)
+	// rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	// rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
+	// rkGetWindowsFilesets($clusterConnect)
+	// rkGetNutanixVM($clusterConnect)
+	// rkGetvmwareVM($clusterConnect)
+	// rkGetHypervVM($clusterConnect)
+	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
+	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
+	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
+	// getRubrikSLAname($clusterConnect,$SLAid)
+	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
+	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
+	// rkGetSupportToken($clusterConnect)
+	// rkGetEpoch($dateString)
+	// rkGetEpoch2($dateString)
+	// rkGetTimeStamp($dateString)
+	// rkEpochToSQL($EpochTime)
+	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetHostID($clusterConnect,$hostName)
+	// rkRefreshHost($clusterConnect,$hostName)
+	// rkGetAgentConnectivity($clusterConnect,$hostName)
+	// rkGetSupportTunnel($clusterConnect)
+	// rkGetAllSnapshotInfo($clusterConnect)
+	// rkGetUnmanaged($clusterConnect)
+	// rkDeleteUnmanaged($clusterConnect,$ObjID)
+	// rkGetFailedAmount($clusterConnect,$objectName)
+	// rkGetSnapshotCount($clusterConnect)
+	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
+	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
+	// rkGetReportID($clusterConnect,$reportName)
+	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
+	// rkRefreshReport($clusterConnect,$rptID)
+	// rkColorOutput($string)
+	// rkColorRed($string)
+	// rkFormatBytes($bytes,$decimals=2,$system='metric')
 
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
@@ -584,7 +593,6 @@
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($curl);
 		curl_close($curl);
-
 		return json_decode($result);
 	}
 	
@@ -1481,6 +1489,118 @@
 		}
 	}
 		
+	// ---------------------------------------------------------------------------
+	// Create report based on specifications
+	// ---------------------------------------------------------------------------
+ 
+ 	function rkCreateReport($clusterConnect,$rptName,$rptSpecs)
+ 	{
+		$API="/api/internal/report";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$rptSpecs);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($rptSpecs),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		
+		// if return 201 all is ok
+		return $info;
+ 	}
+ 	
+	// ---------------------------------------------------------------------------
+	// Return report ID based on report name
+	// ---------------------------------------------------------------------------
+
+ 	function rkGetReportID($clusterConnect,$reportName)
+ 	{
+		$API="/api/internal/report?name=".urlencode($reportName)."&sort_by=name&sort_order=asc";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		return $result->data[0]->id;
+ 	}
+
+	// ---------------------------------------------------------------------------
+	// Apply a schedule on a report
+	// ---------------------------------------------------------------------------
+
+	function rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
+	{
+		$API="/api/internal/report/".urlencode($rptID)."/email_subscription";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$scheduleDefinition);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($scheduleDefinition),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		
+		// if return 200 all is ok
+		return $info;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Refresh rerpot data
+	// ---------------------------------------------------------------------------
+
+	function rkRefreshReport($clusterConnect,$rptID)
+	{
+		$API="/api/internal/report/".urlencode($rptID)."/refresh";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		
+		// if return 202 all is ok
+		return $info;
+	}
+
+
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
 	// ---------------------------------------------------------------------------
