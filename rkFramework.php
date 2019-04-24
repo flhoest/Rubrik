@@ -13,8 +13,8 @@
 						\/             \/                  \/	
 	*/
 	
-	// Function index in alphabetical order
-	// ------------------------------------
+	// Function index in alphabetical order (total 53)
+	//------------------------------------------------
 
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
