@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.99                      //
+	//                   Rubrik Php Framework version 0.990                     //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -13,61 +13,63 @@
 						\/             \/                  \/	
 	*/
 	
-	// Function Index
-	// --------------
-	// rkGetClusterDetails($clusterConnect)
-	// rkCheckAccess($clusterConnect)
-	// rkGetFileSet($clusterConnect)
-	// rkFileSetBackup($clusterConnect,$filesetId)
-	// rkGetClusterVersion($clusterConnect)
-	// getRubrikSLAs($clusterConnect)
+	// Function index in alphabetical order
+	// ------------------------------------
+
+	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
-	// rkGetObjectStatus($clusterConnect,$objectName)
-	// getRubrikTotalStorage($clusterConnect)
-	// getRubrikAvailableStorage($clusterConnect)
-	// getRubrikRunway($clusterConnect)
 	// getRubrikNodeCount($clusterConnect)
-	// rkGetFilesetSnaps($clusterConnect,$filesetID)
-	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
-	// rkGetMSSQL($clusterConnect)
-	// rkGetUnmanagedSnapshots($clusterConnect,$ID)
-	// rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
-	// rkGetWindowsFilesets($clusterConnect)
-	// rkGetNutanixVM($clusterConnect)
-	// rkGetvmwareVM($clusterConnect)
-	// rkGetHypervVM($clusterConnect)
-	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
-	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
-	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
+	// getRubrikRunway($clusterConnect)
 	// getRubrikSLAname($clusterConnect,$SLAid)
-	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
-	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
-	// rkGetSupportToken($clusterConnect)
-	// rkGetEpoch($dateString)
-	// rkGetEpoch2($dateString)
-	// rkGetTimeStamp($dateString)
-	// rkEpochToSQL($EpochTime)
-	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
-	// rkGetHostID($clusterConnect,$hostName)
-	// rkRefreshHost($clusterConnect,$hostName)
-	// rkGetAgentConnectivity($clusterConnect,$hostName)
-	// rkGetSupportTunnel($clusterConnect)
-	// rkGetAllSnapshotInfo($clusterConnect)
-	// rkGetUnmanaged($clusterConnect)
-	// rkDeleteUnmanaged($clusterConnect,$ObjID)
-	// rkGetFailedAmount($clusterConnect,$objectName)
-	// rkGetSnapshotCount($clusterConnect)
-	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
-	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
-	// rkGetReportID($clusterConnect,$reportName)
-	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
-	// rkRefreshReport($clusterConnect,$rptID)
+	// getRubrikSLAs($clusterConnect)
+	// getRubrikTotalStorage($clusterConnect)
+	// rkCheckAccess($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
+	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
+	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
+	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
+	// rkDeleteUnmanaged($clusterConnect,$ObjID)
+	// rkEpochToSQL($EpochTime)
+	// rkFileSetBackup($clusterConnect,$filesetId)
 	// rkFormatBytes($bytes,$decimals=2,$system='metric')
-
+	// rkGetAgentConnectivity($clusterConnect,$hostName)
+	// rkGetAllSnapshotInfo($clusterConnect)
+	// rkGetClusterDetails($clusterConnect)
+	// rkGetClusterVersion($clusterConnect)
+	// rkGetEpoch($dateString)
+	// rkGetEpoch2($dateString)
+	// rkGetFailedAmount($clusterConnect,$objectName)
+	// rkGetFileSet($clusterConnect)
+	// rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
+	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
+	// rkGetFilesetSnaps($clusterConnect,$filesetID)
+	// rkGetHostID($clusterConnect,$hostName)
+	// rkGetHypervVM($clusterConnect)
+	// rkGetMSSQL($clusterConnect)
+	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
+	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
+	// rkGetNutanixVM($clusterConnect)
+	// rkGetObjectStatus($clusterConnect,$objectName)
+	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
+	// rkGetReportID($clusterConnect,$reportName)
+	// rkGetSnapshotCount($clusterConnect)
+	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
+	// rkGetSupportToken($clusterConnect)
+	// rkGetSupportTunnel($clusterConnect)
+	// rkGetTimeStamp($dateString)
+	// rkGetUnmanaged($clusterConnect)
+	// rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	// rkGetWindowsFilesets($clusterConnect)
+	// rkGetmssqlSnapshot($clusterConnect,$mssqlID)
+	// rkGetvmwareVM($clusterConnect)
+	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
+	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	// rkRefreshHost($clusterConnect,$hostName)
+	// rkRefreshReport($clusterConnect,$rptID)
+	
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -687,9 +689,10 @@
 		curl_close($curl);
 
 		$dbID='';
+
 		for($i=0;$i<count($result);$i++)
 		{
-			if($result[$i]->name==$dbName && $result[$i]->rootProperties->rootName==$dbHost)
+			if(($result[$i]->name==$dbName || $result[$i]->InstanceName==$dbName) && $result[$i]->rootProperties->rootName==$dbHost)
 			{
 // 				print("id : \t\t\t\t".rkColorOutput($result[$i]->id)."\n");     		
 // 				print("Host : \t\t\t\t".rkColorOutput($result[$i]->rootProperties->rootName)."\n");
@@ -952,6 +955,29 @@
 			}
 		}
 		return $res;
+	}
+
+	// ---------------------------------------------------
+	// Function returning snapshot of an MS SQL DB
+	// ---------------------------------------------------
+
+	function rkGetmssqlSnapshot($clusterConnect,$mssqlID)
+	{
+		$API="/api/v1/mssql/db/".urlencode($mssqlID)."/snapshot";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		return(json_decode($result));
 	}
 
 	// ---------------------------------------------------
