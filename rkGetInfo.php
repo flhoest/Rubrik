@@ -2,7 +2,7 @@
 
 <?php
 	//////////////////////////////////////////////////////////////////////////////
-	//               Rubrik Php Information - rkGetInfo.php v 1.2               //
+	//               Rubrik Php Information - rkGetInfo.php v 1.3               //
 	//                        (c) 2019 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -54,12 +54,12 @@
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	print("| ".str_pad("Cluster Name : ".rkColorOutput($cluster -> name),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
-	print("| ".str_pad("Atlas version : ".rkColorOutput($cluster -> version),$padSize," ",STR_PAD_RIGHT)." |\n");
-	print("| ".str_pad("Total capacity : ".rkColorOutput(formatBytes(json_decode(getRubrikTotalStorage($clusterConnect))->bytes)),$padSize," ",STR_PAD_RIGHT)." |\n");
-	print("| ".str_pad("Number of node(s) : ".rkColorOutput(json_decode(getRubrikNodeCount($clusterConnect))->total),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("CDM version : ".rkColorOutput($cluster -> version),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Total capacity : ".rkColorOutput(rkFormatBytes(json_decode(getRubrikTotalStorage($clusterConnect))->bytes)),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Number of node(s) : ".rkColorOutput(getRubrikNodeCount($clusterConnect)->total),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Total Snapshot(s) : ".rkColorOutput(rkGetSnapshotCount($clusterConnect)),$padSize," ",STR_PAD_RIGHT)." |\n");
 
-	$clusterData=json_decode(getRubrikNodeCount($clusterConnect));
+	$clusterData=getRubrikNodeCount($clusterConnect);
 	$nodeNum=1;
 
  	foreach ($clusterData->data as $item) 
@@ -113,7 +113,7 @@
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 
 	$availableSpace=json_decode(getRubrikAvailableStorage($clusterConnect));
-	print("| ".str_pad("Available Space : ".rkColorOutput(formatBytes($availableSpace->value)),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Available Space : ".rkColorOutput(rkFormatBytes($availableSpace->value)),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("| ".str_pad("Cluster Runway : ".rkColorOutput(json_decode(getRubrikRunway($clusterConnect))->days." day(s)"),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	print("| ".str_pad("Snapshots Ingested : ".rkColorOutput($snapshots["Ingested"]),$padSize," ",STR_PAD_RIGHT)." |\n");
@@ -138,11 +138,11 @@
 			print("| ".str_pad("Object Name : ".rkColorOutput($item->name),$padSize," ",STR_PAD_RIGHT)." |\n");
 			print("| ".str_pad("Object located on : ".rkColorOutput($item->physicalLocation[0]->name),$padSize," ",STR_PAD_RIGHT)." |\n");
 			print("| ".str_pad("Objedt is : ".rkColorOutput($item->unmanagedStatus),$padSize," ",STR_PAD_RIGHT)." |\n");
-			print("| ".str_pad("Size on disk : ".rkColorOutput(formatBytes($item->localStorage)),$padSize," ",STR_PAD_RIGHT)." |\n");
+			print("| ".str_pad("Size on disk : ".rkColorOutput(rkFormatBytes($item->localStorage)),$padSize," ",STR_PAD_RIGHT)." |\n");
 		}
 		
 		print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
-		print("| ".str_pad("Potential savings from relic's : ".rkColorOutput(formatBytes($totalUnmanagedStorage)),$padSize," ",STR_PAD_RIGHT)." |\n");
+		print("| ".str_pad("Potential savings from relic's : ".rkColorOutput(rkFormatBytes($totalUnmanagedStorage)),$padSize," ",STR_PAD_RIGHT)." |\n");
 		print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 	}
 
