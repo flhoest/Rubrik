@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.990                     //
+	//                   Rubrik Php Framework version 0.995                     //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -13,7 +13,7 @@
 						\/             \/                  \/	
 	*/
 	
-	// Function index in alphabetical order (total 53)
+	// Function index in alphabetical order (total 55)
 	//------------------------------------------------
 
 	// getRubrikAvailableStorage($clusterConnect)
@@ -21,7 +21,6 @@
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 	// getRubrikNodeCount($clusterConnect)
 	// getRubrikRunway($clusterConnect)
-	// getRubrikSLAname($clusterConnect,$SLAid)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
 	// rkCheckAccess($clusterConnect)
@@ -46,6 +45,7 @@
 	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
 	// rkGetFilesetSnaps($clusterConnect,$filesetID)
 	// rkGetHostID($clusterConnect,$hostName)
+	// rkGetHumanTime($timeStamp)
 	// rkGetHypervVM($clusterConnect)
 	// rkGetMSSQL($clusterConnect)
 	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
@@ -55,6 +55,8 @@
 	// rkGetObjectStatus($clusterConnect,$objectName)
 	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetReportID($clusterConnect,$reportName)
+	// rkGetSLAid($clusterConnect,$SLAname)
+	// rkGetSLAname($clusterConnect,$SLAid)
 	// rkGetSnapshotCount($clusterConnect)
 	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
 	// rkGetSupportToken($clusterConnect)
@@ -69,7 +71,7 @@
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
-	
+		
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -208,7 +210,7 @@
 		// Check if cluster is running v 5.0.0-p1-827 in this case, need to invoke api v2 call
 		$ver=rkGetClusterVersion($clusterConnect);
 
-		if($ver=="5.0.0-p1-827") $API="/api/v2/sla_domain?sort_order=asc";
+		if($ver>="5") $API="/api/v2/sla_domain?sort_order=asc";
 		else $API="/api/v1/sla_domain?sort_order=asc";
 
 		$curl = curl_init();
@@ -692,6 +694,7 @@
 
 		for($i=0;$i<count($result);$i++)
 		{
+// 			print($result[$i]->name."\n");
 			if(($result[$i]->name==$dbName || $result[$i]->InstanceName==$dbName) && $result[$i]->rootProperties->rootName==$dbHost)
 			{
 // 				print("id : \t\t\t\t".rkColorOutput($result[$i]->id)."\n");     		
@@ -726,21 +729,35 @@
 		$instanceID='';
 		for($i=0;$i<count($result);$i++)
 		{
+// 			print("-> ".$i." <-\n");
+// 			var_dump($result[$i]);
+// 			print("===\n");
 			if($result[$i]->name==$dbName && $result[$i]->rootProperties->rootName==$dbHost)
 			{
 				$instanceID=$result[$i]->id;
 			}
 		}
+// 		exit();
 		return $instanceID;
 	}
 	
 	// ---------------------------------------------------
-	// Function converts SLA name to SLA ID
+	// Function converts SLA ID to SLA Name
 	// ---------------------------------------------------
 
-	function getRubrikSLAname($clusterConnect,$SLAid)
+	function rkGetSLAname($clusterConnect,$SLAid)
 	{
-		$API="/api/v1/sla_domain";
+		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
+		$cdmver=rkGetClusterVersion($clusterConnect);
+		
+		if($cdmver[0]>="5")
+		{
+			$API="/api/v2/sla_domain";
+		}
+		else
+		{
+			$API="/api/v1/sla_domain";
+		}
 		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -759,10 +776,51 @@
 		$myName='';
 		for($i=0;$i<count($result);$i++)
 		{
+// 			print($result[$i]."\n");
 			if($result[$i]->id == $SLAid) $myName=$result[$i]->name;
 		}
-
 		return($myName);		
+	}
+
+	// ---------------------------------------------------
+	// Function converts SLA Name to SLA ID
+	// ---------------------------------------------------
+
+	function rkGetSLAid($clusterConnect,$SLAname)
+	{
+		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
+		$cdmver=rkGetClusterVersion($clusterConnect);
+		
+		if($cdmver[0]>="5")
+		{
+			$API="/api/v2/sla_domain";
+		}
+		else
+		{
+			$API="/api/v1/sla_domain";
+		}
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+		
+		$myID='';
+		for($i=0;$i<count($result);$i++)
+		{
+// 			var_dump($result[$i]);
+			if($result[$i]->name == $SLAname) $myID=$result[$i]->id;
+		}
+		return($myID);		
 	}
 
 	// ---------------------------------------------------------------------------
@@ -927,8 +985,8 @@
 		curl_close($curl);
 		
 		$result=json_decode($result)->data;
-		var_dump($result);
-		var_dump($object);
+// 		var_dump($result);
+// 		var_dump($object);
 
 		// Match associated $jobID
 		foreach ($result as $item) 
@@ -1019,6 +1077,12 @@
 	{
 		$epoch=DateTime::createFromFormat("D M d H:i:s e Y",$dateString);
 		return date_format($epoch,'U');
+	}
+	
+	function rkGetHumanTime($timeStamp)
+	{
+		$time=DateTime::createFromFormat("Y-m-d\TH:i:s",$timeStamp);
+		return date_format($time,'D M d H:i:s e Y');
 	}
 
 
@@ -1236,7 +1300,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Ingested"]=formatBytes(json_decode($result)->value);
+		$snapshots["Ingested"]=rkFormatBytes(json_decode($result)->value);
 
  		// Step 2 : Get logical snapshots size -> /api/internal/stats/snapshot_storage/logical
 		
@@ -1254,7 +1318,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Logical"]=formatBytes(json_decode($result)->value);
+		$snapshots["Logical"]=rkFormatBytes(json_decode($result)->value);
 
  		// Step 3 : Get physical snapshots size -> /api/internal/stats/snapshot_storage/physical
 
@@ -1272,7 +1336,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Physical"]=formatBytes(json_decode($result)->value);
+		$snapshots["Physical"]=rkFormatBytes(json_decode($result)->value);
 						
  		return($snapshots);
  	}
