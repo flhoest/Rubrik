@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.995                     //
+	//                   Rubrik Php Framework version 0.998                     //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -13,7 +13,7 @@
 						\/             \/                  \/	
 	*/
 	
-	// Function index in alphabetical order (total 55)
+	// Function index in alphabetical order (total 56)
 	//------------------------------------------------
 
 	// getRubrikAvailableStorage($clusterConnect)
@@ -28,6 +28,7 @@
 	// rkColorRed($string)
 	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
 	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
+	// rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
 	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
 	// rkDeleteUnmanaged($clusterConnect,$ObjID)
 	// rkEpochToSQL($EpochTime)
@@ -70,8 +71,8 @@
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkRefreshHost($clusterConnect,$hostName)
-	// rkRefreshReport($clusterConnect,$rptID)
-		
+	// rkRefreshReport($clusterConnect,$rptID)		
+
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -1707,6 +1708,67 @@
 	function rkColorRed($string)
 	{
 		return ("\e[1;31m".$string."\033[0m");
+	}
+
+	// ---------------------------------------------------------------------------
+	// Function that creates SLA 
+	// ---------------------------------------------------------------------------
+
+	function rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
+	{
+		$API="/api/v1/sla_domain";
+
+		$config_params="
+			{
+				\"name\": \"".$slaName."\",
+				\"frequencies\": 
+				[
+					{
+						\"timeUnit\": \"Minute\",
+						\"frequency\": ".$HFreq.",
+						\"retention\": ".$HRet."
+					},
+					{
+						\"timeUnit\": \"Hourly\",
+						\"frequency\": ".$HFreq.",
+						\"retention\": ".$HRet."
+					},
+					{
+						\"timeUnit\": \"Daily\",
+						\"frequency\": ".$DFreq.",
+						\"retention\": ".$DRet."
+					},
+					{
+						\"timeUnit\": \"Monthly\",
+						\"frequency\": ".$MFreq.",
+						\"retention\": ".$MRet."
+					},
+					{
+						\"timeUnit\": \"Yearly\",
+						\"frequency\": ".$YFreq.",
+						\"retention\": ".$YRet."
+					}
+				]
+			}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+			
+		if($info==201) return TRUE;
+		else return FALSE;
 	}
 		
 	// ---------------------------------------------------------------------------
