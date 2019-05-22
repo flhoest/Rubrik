@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 0.998                     //
+	//                   Rubrik Php Framework version 1.0                       //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -13,7 +13,7 @@
 						\/             \/                  \/	
 	*/
 	
-	// Function index in alphabetical order (total 56)
+	// Function index in alphabetical order (total 63)
 	//------------------------------------------------
 
 	// getRubrikAvailableStorage($clusterConnect)
@@ -33,6 +33,7 @@
 	// rkDeleteUnmanaged($clusterConnect,$ObjID)
 	// rkEpochToSQL($EpochTime)
 	// rkFileSetBackup($clusterConnect,$filesetId)
+	// rkFileSetExport($clusterConnect,$snapshotID,$targetHostID,$sourcePath,$targetPath)
 	// rkFormatBytes($bytes,$decimals=2,$system='metric')
 	// rkGetAgentConnectivity($clusterConnect,$hostName)
 	// rkGetAllSnapshotInfo($clusterConnect)
@@ -44,6 +45,7 @@
 	// rkGetFileSet($clusterConnect)
 	// rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
 	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
+	// rkGetFilesetID($clusterConnect,$host,$fileSetName)
 	// rkGetFilesetSnaps($clusterConnect,$filesetID)
 	// rkGetHostID($clusterConnect,$hostName)
 	// rkGetHumanTime($timeStamp)
@@ -59,20 +61,24 @@
 	// rkGetSLAid($clusterConnect,$SLAname)
 	// rkGetSLAname($clusterConnect,$SLAid)
 	// rkGetSnapshotCount($clusterConnect)
+	// rkGetSnapshotFromFilesetID($clusterConnect,$filesetID)
 	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
 	// rkGetSupportToken($clusterConnect)
 	// rkGetSupportTunnel($clusterConnect)
 	// rkGetTimeStamp($dateString)
 	// rkGetUnmanaged($clusterConnect)
 	// rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	// rkGetUserDetails($clusterConnect,$userID)
+	// rkGetUserID($clusterConnect,$userName)
+	// rkGetUserName($clusterConnect,$userID)
+	// rkGetUsers($clusterConnect)
 	// rkGetWindowsFilesets($clusterConnect)
 	// rkGetmssqlSnapshot($clusterConnect,$mssqlID)
 	// rkGetvmwareVM($clusterConnect)
-	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
+	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkRefreshHost($clusterConnect,$hostName)
-	// rkRefreshReport($clusterConnect,$rptID)		
-
+	// rkRefreshReport($clusterConnect,$rptID)
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -555,7 +561,6 @@
 		return($result);
 	}
 	
-	
 	// ---------------------------------------------------
 	// Function who returns all Windows FileSets
 	// ---------------------------------------------------
@@ -578,7 +583,105 @@
 
 		return $result;
 	}
+	
+	// ------------------------------------
+	// Function to retrieve ID of a fileset
+	// ------------------------------------
+	
+	function rkGetFilesetID($clusterConnect,$host,$fileSetName)
+	{
+		$API="/api/internal/host_fileset?hostname=".urlencode($host);
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		curl_close($curl);
 
+		$filesetFound=json_decode($result)->data[0]->filesets;
+		
+		$found=FALSE;
+		if(count($filesetFound))
+		{
+			for($i=0;$i<count($filesetFound);$i++)
+			{
+				if($filesetFound[$i]->name==$fileSetName)
+				{
+					$found=TRUE;
+					$id=$filesetFound[$i]->id;;
+				} 
+			}
+		}
+
+		if($found) return $id;
+		else return FALSE;
+	}
+
+	// ------------------------------------------------------
+	// Function to retrieve latest snapshot ID from a fileset
+	// ------------------------------------------------------
+	
+	function rkGetSnapshotFromFilesetID($clusterConnect,$filesetID)
+	{
+		$API="/api/v1/fileset/".urlencode($filesetID);
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		curl_close($curl);
+		
+		$snaps=json_decode($result)->snapshots;
+		
+		// return the latest snapshot ID
+		return $snaps[count($snaps)-1]->id;
+	}
+	
+	// ---------------------------------------------------
+	// Function who export files from a FileSet snapshot
+	// ---------------------------------------------------
+
+	function rkFileSetExport($clusterConnect,$snapshotID,$targetHostID,$sourcePath,$targetPath)
+	{
+		$API="/api/v1/fileset/snapshot/".urlencode($snapshotID)."/export_file";
+
+		$config_params="
+			{
+				\"sourceDir\": \"".addslashes($sourcePath)."\",
+				\"destinationDir\": \"".addslashes($targetPath)."\",
+				\"IgnoreErrors\" : true,
+				\"hostId\": \"".$targetHostID."\"
+			}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);
+		return $result->status;
+	}
+	
 	// ---------------------------------------------------
 	// Function who returns all Nutanix VMs
 	// ---------------------------------------------------
@@ -695,7 +798,7 @@
 
 		for($i=0;$i<count($result);$i++)
 		{
-// 			print($result[$i]->name."\n");
+// 			print($result[$i]->name." --> ".$result[$i]->rootProperties->rootName."\n");
 			if(($result[$i]->name==$dbName || $result[$i]->InstanceName==$dbName) && $result[$i]->rootProperties->rootName==$dbHost)
 			{
 // 				print("id : \t\t\t\t".rkColorOutput($result[$i]->id)."\n");     		
@@ -853,10 +956,16 @@
 	// Restore MS SQL DB at a given time
 	// ---------------------------------------------------------------------------
 	
-	function rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$dbFilePath,$overwrite=false)
+	function rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	{
-		$path=addslashes($dbFilePath);
+		// If specific path have been defined, add them in the specification, otherwise source path will be used on target machine
 
+		if($targetPaths)
+		{
+			$logFilePath=addslashes($targetPaths["log"]);
+			$dataFilePath=addslashes($targetPaths["data"]);
+		}
+		
 		// Since Andes - CDM v 5.x - target DB overwrite is possible.
 		// I CDM version >= 5.x and $overwrite=true -> overwrite will be initiated
 		$cdmver=rkGetClusterVersion($clusterConnect);
@@ -872,81 +981,60 @@
 			$v5=false;
 		}
 		
-		// Get original logicalName
-
-		// Convert epoch to SQL time stamp
-		$names=rkMSSQLgetFiles($clusterConnect,$dbSourceID,rkEpochToSQL(substr($timeStamp, 0, -3)));
-
-		$logicalName1=$names[0]->logicalName;
-		$logicalName2=$names[1]->logicalName;
-		$fileName1=$names[0]->originalName;
-		$fileName2=$names[1]->originalName;
-		
-		// Note : logicalName must be the same as the source DB. It can be changed using newlogicalName
-		$tSQL=json_decode(rkGetMSSQL($clusterConnect))->data;
-
-		for($i=0;$i<count($tSQL);$i++)
-		{
-			if($tSQL[$i]->id==$dbSourceID) 
-			{
-				$logicalName=$tSQL[$i]->name;
-			}
-		}
-		
 		if($v5)
 		{
+			print("CDM Version above 5.\n");
 			$overwrite=var_export($overwrite,true);
 			$config_params=
-			"{
-				\"recoveryPoint\": 
-				{
-					\"timestampMs\": ".$timeStamp."
-				},
-				\"targetInstanceId\": \"".$dbTargetInstanceID."\",
-				\"targetDatabaseName\": \"".$dbTargetName."\",
-				\"targetFilePaths\": 
-				[
+				"{
+					\"recoveryPoint\": 
 					{
-						\"logicalName\": \"".$logicalName1."\",
-						\"exportPath\": \"".$path."\"
+						\"timestampMs\": ".$timeStamp."
 					},
-					{
-						\"logicalName\": \"".$logicalName2."\",
-						\"exportPath\": \"".$path."\"
-					}
-				],
-				\"finishRecovery\": true,
-				\"maxDataStreams\": 4,
-				\"allowOverwrite\": ".$overwrite."
-			}";
+					\"targetInstanceId\": \"".$dbTargetInstanceID."\",
+					\"targetDatabaseName\": \"".$dbTargetName."\", ";
+				
+			if(isset($logFilePath))
+			{
+				$config_params.="
+					\"targetDataFilePath\": \"".$dataFilePath."\",
+					\"targetLogFilePath\": \"".$logFilePath."\",";
+			}		
+			
+			$config_params.="		
+			
+					\"finishRecovery\": true,
+					\"maxDataStreams\": 6,
+					\"allowOverwrite\": ".$overwrite."
+				}";
 		}
+
 		else
 		{
 			$config_params=
-			"{
-				\"recoveryPoint\": 
-				{
-					\"timestampMs\": ".$timeStamp."
-				},
-				\"targetInstanceId\": \"".$dbTargetInstanceID."\",
-				\"targetDatabaseName\": \"".$dbTargetName."\",
-				\"targetFilePaths\": 
-				[
+				"{
+					\"recoveryPoint\": 
 					{
-						\"logicalName\": \"".$logicalName1."\",
-						\"exportPath\": \"".$path."\"
+						\"timestampMs\": ".$timeStamp."
 					},
-					{
-						\"logicalName\": \"".$logicalName2."\",
-						\"exportPath\": \"".$path."\"
-					}
-				],
-				\"finishRecovery\": true,
-				\"maxDataStreams\": 4
-			}";
+					\"targetInstanceId\": \"".$dbTargetInstanceID."\",
+					\"targetDatabaseName\": \"".$dbTargetName."\", ";
+				
+			if(isset($logFilePath))
+			{
+				$config_params.="
+					\"targetDataFilePath\": \"".$dataFilePath."\",
+					\"targetLogFilePath\": \"".$logFilePath."\",";
+			}		
+			
+			$config_params.="		
+			
+					\"finishRecovery\": true,
+					\"maxDataStreams\": 6,
+				}";
 		}
-		$API="/api/v1/mssql/db/".urlencode($dbSourceID)."/export";
 
+		$API="/api/v1/mssql/db/".urlencode($dbSourceID)."/export";
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_POST, 1);
 		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
@@ -972,7 +1060,6 @@
 	function rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	{
 		$API="/api/internal/event?&event_type=Recovery&object_name=".$object."&show_only_latest=true";
-		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
 		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
@@ -986,8 +1073,6 @@
 		curl_close($curl);
 		
 		$result=json_decode($result)->data;
-// 		var_dump($result);
-// 		var_dump($object);
 
 		// Match associated $jobID
 		foreach ($result as $item) 
@@ -1003,7 +1088,7 @@
 				$res["status"]=$result[0]->eventStatus;
 				$res["info"]=$result[0]->eventInfo;
 				
-				//Not clean, I know ... looking for other solution
+				//Not clean, I know ... looking for other solution, maybe a while loop
 				break;
 			}
 			else
@@ -1063,6 +1148,127 @@
 
 		return(json_decode($result));
 	}
+
+	// ---------------------------------------------------
+	// Function get locally defined users
+	// ---------------------------------------------------
+
+	function rkGetUsers($clusterConnect)
+	{
+		$API="/api/internal/user";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		return(json_decode($result));
+	}
+
+	// -----------------------------------
+	// Function get user ID from user Name
+	// -----------------------------------
+
+	function rkGetUserID($clusterConnect,$userName)
+	{
+		$API="/api/internal/user";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+
+		curl_close($curl);
+
+		$found=FALSE;
+
+		foreach($result as $item) 
+		{
+			if($item->username==$userName)
+			{
+				$id=$item->id;
+				$found=TRUE;
+			}
+		}
+		
+		if ($found) return $id;
+		else return $found;
+	}
+
+	// -----------------------------------
+	// Function get user name from user ID
+	// -----------------------------------
+
+	function rkGetUserName($clusterConnect,$userID)
+	{
+		$API="/api/internal/user";
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		$found=FALSE;
+		
+		foreach($result as $item) 
+		{
+			if($item->id==$userID)
+			{
+				$username=$item->username;
+				$found=TRUE;
+			}
+		}
+
+		if ($found) return $username;
+		else return $found;
+	}
+
+	// -----------------------------------
+	// Function get user details
+	// -----------------------------------
+
+	function rkGetUserDetails($clusterConnect,$userID)
+	{
+		$API="/api/internal/user/".urlencode($userID);
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		return $result;
+	}
+
 		
 	// ---------------------------------------------------------------------------
 	// Convert Rubrik human readable time to EPOCH time used in APIs
