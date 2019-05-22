@@ -722,7 +722,7 @@ This could be usefull to get the potential savings on a cluster. Indeed, those o
 
 > _rkColorRed($string)_
 
-> _formatBytes($bytes, $decimals = 2, $system = 'metric')_
+> _rkFormatBytes($bytes, $decimals = 2, $system = 'metric')_
 
 - Inputs : an integer representing a size in bytes
 - Output : a human readable size ineither KB, MB, GB, TB. There is the choice to round the metric way (power of 10) or the binary way (power of 2)
