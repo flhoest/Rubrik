@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.0                       //
+	//                   Rubrik Php Framework version 1.01                      //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -10,12 +10,9 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/	
+							\/             \/                  \/	
 	*/
 	
-	// Function index in alphabetical order (total 63)
-	//------------------------------------------------
-
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
@@ -29,8 +26,10 @@
 	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
 	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
 	// rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
+	// rkCreateUser($clusterConnect,$userName,$Password)
 	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
 	// rkDeleteUnmanaged($clusterConnect,$ObjID)
+	// rkDeleteUser($clusterConnect,$userID)
 	// rkEpochToSQL($EpochTime)
 	// rkFileSetBackup($clusterConnect,$filesetId)
 	// rkFileSetExport($clusterConnect,$snapshotID,$targetHostID,$sourcePath,$targetPath)
@@ -77,8 +76,10 @@
 	// rkGetvmwareVM($clusterConnect)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	// rkMakeAdminUser($clusterConnect,$userID)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
+
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
 	// ---------------------------------------------------------------------------
@@ -651,6 +652,7 @@
 	
 	// ---------------------------------------------------
 	// Function who export files from a FileSet snapshot
+	// Note : until 5.2 the symlink are not supported for export. So, to avoid error, just exclude them from the fileset
 	// ---------------------------------------------------
 
 	function rkFileSetExport($clusterConnect,$snapshotID,$targetHostID,$sourcePath,$targetPath)
@@ -1268,8 +1270,105 @@
 
 		return $result;
 	}
+	
+	// -----------------------
+	// Function to create user
+	// -----------------------
 
-		
+	function rkCreateUser($clusterConnect,$userName,$Password)
+	{
+		$API="/api/internal/user";
+
+		$config_params="
+			{
+				  \"username\": \"".$userName."\",
+				  \"password\": \"".$Password."\"
+			}
+		";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);
+		return $result;
+	}
+
+	// ---------------------------------------------
+	// Function to promote a userID as cluster admin
+	// ---------------------------------------------
+
+	function rkMakeAdminUser($clusterConnect,$userID)
+	{
+	
+		$API="/api/internal/authorization/role/admin";
+
+		$config_params="
+			{
+				\"principals\": 
+				[
+					\"".$userID."\"
+				],
+				\"privileges\": 
+				{
+					\"fullAdmin\": 
+					[
+						\"Global:::All\"
+					]
+				}
+			}
+		";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);
+		return $result;
+	}
+	
+	// ---------------------------
+	// Function to delete a userID
+	// ---------------------------
+
+ 	function rkDeleteUser($clusterConnect,$userID)
+ 	{
+		$API="/api/internal/user/".urlencode($userID);
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+
+		return $result;
+ 	}
+					
 	// ---------------------------------------------------------------------------
 	// Convert Rubrik human readable time to EPOCH time used in APIs
 	// ---------------------------------------------------------------------------
