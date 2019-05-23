@@ -12,7 +12,10 @@
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
 						\/             \/                  \/	
 	*/
-	
+
+	// Function index in alphabetical order (total 66)
+	//------------------------------------------------
+
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
