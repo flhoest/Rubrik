@@ -1,8 +1,10 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.01                      //
+	//                   Rubrik Php Framework version 1.02                      //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
+	//////////////////////////////////////////////////////////////////////////////
+	//                      Created on OS X with BBEdit                         //
 	//////////////////////////////////////////////////////////////////////////////
 	
 	/*				__________        ___.            .__  __    
@@ -10,17 +12,16 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/	
+						\/             \/                  \/	Php Framework
 	*/
 
-	// Function index in alphabetical order (total 66)
+	// Function index in alphabetical order (total 71)
 	//------------------------------------------------
 
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 	// getRubrikNodeCount($clusterConnect)
-	// getRubrikRunway($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
 	// rkCheckAccess($clusterConnect)
@@ -39,12 +40,14 @@
 	// rkFormatBytes($bytes,$decimals=2,$system='metric')
 	// rkGetAgentConnectivity($clusterConnect,$hostName)
 	// rkGetAllSnapshotInfo($clusterConnect)
+	// rkGetBlackout($clusterConnect)
 	// rkGetClusterDetails($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
 	// rkGetEpoch($dateString)
 	// rkGetEpoch2($dateString)
 	// rkGetFailedAmount($clusterConnect,$objectName)
 	// rkGetFileSet($clusterConnect)
+	// rkGetFileSetSnapSize($clusterConnect,$snapshotID,$absolutePath)
 	// rkGetFileSetSnapshotsDetails($clusterConnect,$ID)
 	// rkGetFileURLfromSnap($clusterConnect,$snapshotID,$fileName)
 	// rkGetFilesetID($clusterConnect,$host,$fileSetName)
@@ -60,6 +63,7 @@
 	// rkGetObjectStatus($clusterConnect,$objectName)
 	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetReportID($clusterConnect,$reportName)
+	// rkGetRunway($clusterConnect)
 	// rkGetSLAid($clusterConnect,$SLAname)
 	// rkGetSLAname($clusterConnect,$SLAid)
 	// rkGetSnapshotCount($clusterConnect)
@@ -73,6 +77,7 @@
 	// rkGetUserDetails($clusterConnect,$userID)
 	// rkGetUserID($clusterConnect,$userName)
 	// rkGetUserName($clusterConnect,$userID)
+	// rkGetUserPriviledges($clusterConnect,$userID)
 	// rkGetUsers($clusterConnect)
 	// rkGetWindowsFilesets($clusterConnect)
 	// rkGetmssqlSnapshot($clusterConnect,$mssqlID)
@@ -80,8 +85,14 @@
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
+	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
+	// rkSetBanner($clusterConnect,$bannerText)
+		
+	// ==========================================================================
+	//                           Generic functions
+	// ==========================================================================
 
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
@@ -105,9 +116,60 @@
 		return $result;
 	}
 
-	// ---------------------------------------------------------------------------
+	// ----------------------------------------------------------------------------
+	// Function who returns the Rubrik Cluster ID
+	// ----------------------------------------------------------------------------
+
+	function getRubrikClusterID($clusterConnect)
+	{
+		$API="/api/v1/cluster/me";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		$tmp=json_decode($result);
+		$id=$tmp -> id;
+
+		return $id;
+	}
+
+	// ----------------------------------------------------------------------------------------------------------
+	// Function that return TRUE is the protection has been disabled and FALSE if no protection has been disabled
+	// This is AKA "Black Out Window"
+	// ----------------------------------------------------------------------------------------------------------
+
+	function rkGetBlackout($clusterConnect)
+	{
+		$API="/api/internal/blackout_window";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		if(strpos($result, "true" )) return TRUE;
+		else return FALSE;
+		
+	}
+
+	// ---------------------------------------------------------------------------------
 	// Function to check if you have sufficient rights or correct credentials to connect
-	// ---------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------
 	
 	function rkCheckAccess($clusterConnect)
 	{
@@ -141,55 +203,6 @@
 	}
 
 	// --------------------------------------------------
-	// Function to get defined filesets in the cluster
-	// --------------------------------------------------
-	
-	function rkGetFileSet($clusterConnect)
-	{
-		$API="/api/v1/fileset";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return json_decode($result);
-	}
-	
-	// --------------------------------------------------
-	// Function to initiate a fileset protection
-	// --------------------------------------------------
-	
-	function rkFileSetBackup($clusterConnect,$filesetId)
-	{
-		$API="/api/v1/fileset/".urlencode($filesetId)."/snapshot";
-				
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_POST, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return(json_decode($result));
-	
-	}
-	
-	// --------------------------------------------------
 	// Function to get the running version on the cluster
 	// --------------------------------------------------
 	
@@ -211,184 +224,7 @@
 
 		return json_decode($result)->version;
 	}
-		
-	// ----------------------------------------------------------------------------
-	// Function to populate a return variable (JSON text) with all SLA's configured
-	// ----------------------------------------------------------------------------
 
-	function getRubrikSLAs($clusterConnect)
-	{
-		// Check if cluster is running v 5.0.0-p1-827 in this case, need to invoke api v2 call
-		$ver=rkGetClusterVersion($clusterConnect);
-
-		if($ver>="5") $API="/api/v2/sla_domain?sort_order=asc";
-		else $API="/api/v1/sla_domain?sort_order=asc";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return $result;	
-	}
-	
-	// ----------------------------------------------------------------------------
-	// Function who returns the Rubrik Cluster ID
-	// ----------------------------------------------------------------------------
-
-	function getRubrikClusterID($clusterConnect)
-	{
-		$API="/api/v1/cluster/me";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-		$tmp=json_decode($result);
-		$id=$tmp -> id;
-
-		return $id;
-	}
-
-	// -------------------------------------------------------
-	// Function who returns the last num events in the Cluster
-	// -------------------------------------------------------
- 
- 	// Possible values for $eventType are :
-	//
-	// Archive, Audit, AuthDomain, Backup, CloudNativeSource, Configuration, Diagnostic, Instanciate, Maintenance, 
-	// NutanixCluster, Recovery, Replication, StorageArray, System, Vcd, VCenter
-	
-	function getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
-	{
-	
-		$API="/api/internal/event?limit=".$numEvents."&event_type=".$eventType;
-
-		if($objectType!="") $API=$API."&object_type=".$objectType;
-		if($objectName!="") $API=$API."&object_name=".$objectName;
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return $result;
-	}
-
-	// -----------------------------------------------
-	// Function who returns backup status of an object
-	// -----------------------------------------------
-	
-	function rkGetObjectStatus($clusterConnect,$objectName)
-	{
-	
-		$API="/api/internal/event?&object_name=".$objectName."&show_only_latest=false&filter_only_on_latest=true&event_type=Backup";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return json_decode($result);
-	}
-
-	// -------------------------------------------------------
-	// Function who returns total storage capacity for cluster
-	// -------------------------------------------------------
-
-	function getRubrikTotalStorage($clusterConnect)
-	{
-		$API="/api/internal/cluster/me/disk_capacity";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return $result;
-	}
-
-	// -----------------------------------------------------
-	// Function who returns available storage in the Cluster
-	// -----------------------------------------------------
-
-	function getRubrikAvailableStorage($clusterConnect)
-	{
-		$API="/api/internal/stats/available_storage";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return json_decode($result)->value;
-	}
-	
-	// ---------------------------------------------------
-	// Function who returns runway in days for the cluster
-	// ---------------------------------------------------
-
-	function getRubrikRunway($clusterConnect)
-	{
-		$API="/api/internal/stats/runway_remaining";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return json_decode($result)->days;
-	}
-		
 	// ---------------------------------------------------
 	// Function who returns number of nodes in cluster
 	// ---------------------------------------------------
@@ -409,9 +245,138 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-// 		$node_count=json_decode($result)->total;
 		return json_decode($result);
 	}
+
+	// --------------------------------------------------
+	// Function who returns a list of unmanaged snapshots
+	// --------------------------------------------------
+
+	function rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	{
+		$API="/api/internal/unmanaged_object/".urlencode($ID)."/snapshot";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);	
+
+		return($result);
+	}
+	
+	// ---------------------------------------------------
+	// Function who returns all Nutanix VMs
+	// ---------------------------------------------------
+
+	function rkGetNutanixVM($clusterConnect)
+	{
+		$API="/api/internal/nutanix/vm";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		return json_decode($result);
+	}
+	
+	// ---------------------------------------------------
+	// Function who returns all vmware VMs
+	// ---------------------------------------------------
+
+	function rkGetvmwareVM($clusterConnect)
+	{
+		$API="/api/v1/vmware/vm";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+
+	// ---------------------------------------------------
+	// Function who returns all hyper-v VMs
+	// ---------------------------------------------------
+
+	function rkGetHypervVM($clusterConnect)
+	{
+		$API="/api/internal/hyperv/vm";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+	
+	// -------------------------------------------------------------------
+	// Function who sets the login message. Pass empty string to remove it
+	// -------------------------------------------------------------------
+
+	function rkSetBanner($clusterConnect,$bannerText)
+	{
+		$API="/api/internal/cluster/me/login_banner";
+
+		$config_params="
+				{
+				  \"loginBanner\": \"".$bannerText."\"
+				}			
+				";
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+   		
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return($result);
+	}
+
+
+	// ==========================================================================
+	//                           Fileset related functions
+	// ==========================================================================
 
 	// ---------------------------------------------------
 	// Function who returns all snapshots of a fileset
@@ -434,6 +399,37 @@
 		curl_close($curl);
 
 		return json_decode($result);
+	}
+
+	// ---------------------------------------------------
+	// Function who returns the size of a fileset snapshot
+	// ---------------------------------------------------
+
+	function rkGetFileSetSnapSize($clusterConnect,$snapshotID,$absolutePath)
+	{
+		$API="/api/internal/storage/array/volume/group/snapshot/".urlencode($snapshotID)."/browse?path=".urldecode($absolutePath);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+		
+		$size=0;
+		for($i=0;$i<count($result);$i++)
+		{
+			$size+=$result[$i]->size;
+		}
+
+		return($size);
 	}
 
 	// ---------------------------------------------------------------
@@ -496,13 +492,13 @@
 		return($result->links[1]->href);
 	}
 
-	// ---------------------------------------------------
-	// Function who returns all MS SQL object details
-	// ---------------------------------------------------
-
-	function rkGetMSSQL($clusterConnect)
+	// --------------------------------------------------
+	// Function to get defined filesets in the cluster
+	// --------------------------------------------------
+	
+	function rkGetFileSet($clusterConnect)
 	{
-		$API="/api/v1/mssql/db";
+		$API="/api/v1/fileset";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -516,30 +512,32 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return $result;
+		return json_decode($result);
 	}
 	
-	// ------------------------------------------------
-	// Function who returns list of unmanaged snapshots
-	// ------------------------------------------------
-
-	function rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	// --------------------------------------------------
+	// Function to initiate a fileset protection
+	// --------------------------------------------------
+	
+	function rkFileSetBackup($clusterConnect,$filesetId)
 	{
-		$API="/api/internal/unmanaged_object/".urlencode($ID)."/snapshot";
-
+		$API="/api/v1/fileset/".urlencode($filesetId)."/snapshot";
+				
 		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,array());
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
 		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = json_decode(curl_exec($curl));
-		curl_close($curl);	
+		$result = curl_exec($curl);
+		curl_close($curl);
 
-		return($result);
+		return(json_decode($result));
 	}
 
 	// ---------------------------------------------------
@@ -653,10 +651,11 @@
 		return $snaps[count($snaps)-1]->id;
 	}
 	
-	// ---------------------------------------------------
+	// -----------------------------------------------------------
 	// Function who export files from a FileSet snapshot
-	// Note : until 5.2 the symlink are not supported for export. So, to avoid error, just exclude them from the fileset
-	// ---------------------------------------------------
+	// Note : until 5.2 the symlink are not supported for export. 
+	// So, to avoid error, just exclude them from the fileset
+	// -----------------------------------------------------------
 
 	function rkFileSetExport($clusterConnect,$snapshotID,$targetHostID,$sourcePath,$targetPath)
 	{
@@ -681,41 +680,23 @@
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
-		$result = json_decode(curl_exec($curl));
-		curl_close($curl);
-		return $result->status;
-	}
-	
-	// ---------------------------------------------------
-	// Function who returns all Nutanix VMs
-	// ---------------------------------------------------
-
-	function rkGetNutanixVM($clusterConnect)
-	{
-		$API="/api/internal/nutanix/vm";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($curl);
 		curl_close($curl);
+
 		return json_decode($result);
 	}
-	
-	// ---------------------------------------------------
-	// Function who returns all vmware VMs
-	// ---------------------------------------------------
+			
+	// ----------------------------------------------------------------------------
+	// Function to populate a return variable (JSON text) with all SLA's configured
+	// ----------------------------------------------------------------------------
 
-	function rkGetvmwareVM($clusterConnect)
+	function getRubrikSLAs($clusterConnect)
 	{
-		$API="/api/v1/vmware/vm";
+		// Check if cluster is running v 5.0.0-p1-827 in this case, need to invoke api v2 call
+		$ver=rkGetClusterVersion($clusterConnect);
+
+		if($ver>="5") $API="/api/v2/sla_domain?sort_order=asc";
+		else $API="/api/v1/sla_domain?sort_order=asc";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -729,16 +710,49 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		return json_decode($result);
+		return $result;	
+	}
+	
+	// -------------------------------------------------------
+	// Function who returns the last num events in the Cluster
+	// -------------------------------------------------------
+ 
+ 	// Possible values for $eventType are :
+	//
+	// Archive, Audit, AuthDomain, Backup, CloudNativeSource, Configuration, Diagnostic, Instanciate, Maintenance, 
+	// NutanixCluster, Recovery, Replication, StorageArray, System, Vcd, VCenter
+	
+	function getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	{
+	
+		$API="/api/internal/event?limit=".$numEvents."&event_type=".$eventType;
+
+		if($objectType!="") $API=$API."&object_type=".$objectType;
+		if($objectName!="") $API=$API."&object_name=".$objectName;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
 	}
 
-	// ---------------------------------------------------
-	// Function who returns all hyper-v VMs
-	// ---------------------------------------------------
-
-	function rkGetHypervVM($clusterConnect)
+	// -----------------------------------------------
+	// Function who returns backup status of an object
+	// -----------------------------------------------
+	
+	function rkGetObjectStatus($clusterConnect,$objectName)
 	{
-		$API="/api/internal/hyperv/vm";
+	
+		$API="/api/internal/event?&object_name=".$objectName."&show_only_latest=false&filter_only_on_latest=true&event_type=Backup";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -755,6 +769,106 @@
 		return json_decode($result);
 	}
 	
+	// ==========================================================================
+	//                           Storage related functions
+	// ==========================================================================
+
+	// -------------------------------------------------------
+	// Function who returns total storage capacity for cluster
+	// -------------------------------------------------------
+
+	function getRubrikTotalStorage($clusterConnect)
+	{
+		$API="/api/internal/cluster/me/disk_capacity";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+
+	// -----------------------------------------------------
+	// Function who returns available storage in the Cluster
+	// -----------------------------------------------------
+
+	function getRubrikAvailableStorage($clusterConnect)
+	{
+		$API="/api/internal/stats/available_storage";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result)->value;
+	}
+	
+	// ---------------------------------------------------
+	// Function who returns runway in days for the cluster
+	// ---------------------------------------------------
+
+	function rkGetRunway($clusterConnect)
+	{
+		$API="/api/internal/stats/runway_remaining";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result)->days;
+	}
+	
+	// ==========================================================================
+	//                           MS SQL related functions
+	// ==========================================================================
+
+	// ---------------------------------------------------
+	// Function who returns all MS SQL object details
+	// ---------------------------------------------------
+
+	function rkGetMSSQL($clusterConnect)
+	{
+		$API="/api/v1/mssql/db";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+		
 	// ---------------------------------------------------
 	// Function who returns specific MS SQL object details
 	// ---------------------------------------------------
@@ -846,117 +960,9 @@
 				$instanceID=$result[$i]->id;
 			}
 		}
-// 		exit();
 		return $instanceID;
 	}
-	
-	// ---------------------------------------------------
-	// Function converts SLA ID to SLA Name
-	// ---------------------------------------------------
 
-	function rkGetSLAname($clusterConnect,$SLAid)
-	{
-		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
-		$cdmver=rkGetClusterVersion($clusterConnect);
-		
-		if($cdmver[0]>="5")
-		{
-			$API="/api/v2/sla_domain";
-		}
-		else
-		{
-			$API="/api/v1/sla_domain";
-		}
-		
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-		
-		$result=json_decode($result)->data;
-		
-		$myName='';
-		for($i=0;$i<count($result);$i++)
-		{
-// 			print($result[$i]."\n");
-			if($result[$i]->id == $SLAid) $myName=$result[$i]->name;
-		}
-		return($myName);		
-	}
-
-	// ---------------------------------------------------
-	// Function converts SLA Name to SLA ID
-	// ---------------------------------------------------
-
-	function rkGetSLAid($clusterConnect,$SLAname)
-	{
-		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
-		$cdmver=rkGetClusterVersion($clusterConnect);
-		
-		if($cdmver[0]>="5")
-		{
-			$API="/api/v2/sla_domain";
-		}
-		else
-		{
-			$API="/api/v1/sla_domain";
-		}
-		
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-		
-		$result=json_decode($result)->data;
-		
-		$myID='';
-		for($i=0;$i<count($result);$i++)
-		{
-// 			var_dump($result[$i]);
-			if($result[$i]->name == $SLAname) $myID=$result[$i]->id;
-		}
-		return($myID);		
-	}
-
-	// ---------------------------------------------------------------------------
-	// Function to get MS SQL file details
-	// ---------------------------------------------------------------------------
-	
-	function rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
-	{
-		$API="/api/internal/mssql/db/".urlencode($dbSourceID)."/restore_files?time=".$dbRecoveryTime;
-		
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-		
-		$result=json_decode($result);
-		
-		return($result);		
-	}
-	
 	// ---------------------------------------------------------------------------
 	// Restore MS SQL DB at a given time
 	// ---------------------------------------------------------------------------
@@ -1056,7 +1062,242 @@
 		curl_close($curl);
 		return $result;
 	}
+
+	// ---------------------------------------------------------------------------
+	// Function to get MS SQL file details
+	// ---------------------------------------------------------------------------
 	
+	function rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
+	{
+		$API="/api/internal/mssql/db/".urlencode($dbSourceID)."/restore_files?time=".$dbRecoveryTime;
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result);
+		
+		return($result);		
+	}
+
+	// ---------------------------------------------------------------------------
+	// Get physical size of a MS SQL snapshot (for restoration purpose)
+	// ---------------------------------------------------------------------------
+ 
+	function rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+ 	{
+		// 3 Steps 	
+ 		// Step 1 : Get snapshot id based on time /api/v1/mssql/db/<id>/snapshot?after_time=<time1>&before_time=<time2>
+
+		$API="/api/v1/mssql/db/".$dbID."/snapshot?after_time=".urlencode($DateTime)."&before_time=".urlencode($DateTime);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+ 		// Step 2 : Get snapable_id /api/internal/mssql/db/<id>/snappable_id
+
+		$snapshotID=json_decode($result)->data[0]->id;
+		
+		$API="/api/internal/mssql/db/".$dbID."/snappable_id";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$snappableID=json_decode($result)->snappableId;
+
+ 		// Step 3 : Get size of object /api/internal/snapshot/<id>/storage/stats?snappable_id=<id>
+
+		$API="/api/internal/snapshot/".$snapshotID."/storage/stats?snappable_id=".$snappableID;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return(json_decode($result)->logicalBytes);
+		
+ 	}
+
+	// ==========================================================================
+	//                           SLA related functions
+	// ==========================================================================
+	
+	// ---------------------------------------------------
+	// Function converts SLA ID to SLA Name
+	// ---------------------------------------------------
+
+	function rkGetSLAname($clusterConnect,$SLAid)
+	{
+		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
+		$cdmver=rkGetClusterVersion($clusterConnect);
+		
+		if($cdmver[0]>="5")
+		{
+			$API="/api/v2/sla_domain";
+		}
+		else
+		{
+			$API="/api/v1/sla_domain";
+		}
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+		
+		$myName='';
+		for($i=0;$i<count($result);$i++)
+		{
+// 			print($result[$i]."\n");
+			if($result[$i]->id == $SLAid) $myName=$result[$i]->name;
+		}
+		return($myName);		
+	}
+
+	// ---------------------------------------------------
+	// Function converts SLA Name to SLA ID
+	// ---------------------------------------------------
+
+	function rkGetSLAid($clusterConnect,$SLAname)
+	{
+		// Starting with version 5, the way we are getting SLAs is different. Rubrik introduced a new API call for getting customs SLAs
+		$cdmver=rkGetClusterVersion($clusterConnect);
+		
+		if($cdmver[0]>="5")
+		{
+			$API="/api/v2/sla_domain";
+		}
+		else
+		{
+			$API="/api/v1/sla_domain";
+		}
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+		
+		$myID='';
+		for($i=0;$i<count($result);$i++)
+		{
+// 			var_dump($result[$i]);
+			if($result[$i]->name == $SLAname) $myID=$result[$i]->id;
+		}
+		return($myID);		
+	}
+	
+	// ---------------------------------------------------------------------------
+	// Function that creates SLA 
+	// ---------------------------------------------------------------------------
+
+	function rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
+	{
+		$API="/api/v1/sla_domain";
+
+		$config_params="
+			{
+				\"name\": \"".$slaName."\",
+				\"frequencies\": 
+				[
+					{
+						\"timeUnit\": \"Minute\",
+						\"frequency\": ".$HFreq.",
+						\"retention\": ".$HRet."
+					},
+					{
+						\"timeUnit\": \"Hourly\",
+						\"frequency\": ".$HFreq.",
+						\"retention\": ".$HRet."
+					},
+					{
+						\"timeUnit\": \"Daily\",
+						\"frequency\": ".$DFreq.",
+						\"retention\": ".$DRet."
+					},
+					{
+						\"timeUnit\": \"Monthly\",
+						\"frequency\": ".$MFreq.",
+						\"retention\": ".$MRet."
+					},
+					{
+						\"timeUnit\": \"Yearly\",
+						\"frequency\": ".$YFreq.",
+						\"retention\": ".$YRet."
+					}
+				]
+			}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+			
+		if($info==201) return TRUE;
+		else return FALSE;
+	}
+		
 	// ---------------------------------------------------------------------------
 	// Get recovery status of specified object, returns status, info and time and
 	// if not completed, the progress in %age
@@ -1128,6 +1369,10 @@
 		
 		return(json_decode($result));
 	}
+
+	// ==========================================================================
+	//                           Users related functions
+	// ==========================================================================
 
 	// ---------------------------------------------------
 	// Function generating support token
@@ -1352,7 +1597,7 @@
 	// Function to delete a userID
 	// ---------------------------
 
- 	function rkDeleteUser($clusterConnect,$userID)
+	function rkDeleteUser($clusterConnect,$userID)
  	{
 		$API="/api/internal/user/".urlencode($userID);
 
@@ -1371,6 +1616,87 @@
 
 		return $result;
  	}
+
+	// --------------------------------------------------------------------------------------
+	// Function to modify a userID
+	// --------------------------------------------------------------------------------------
+	// Note : all parameters are mandatory and email address must comply with email standards
+	// --------------------------------------------------------------------------------------
+ 	
+	function rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
+	{
+		$API="/api/internal/user/".urldecode($userID);
+
+		$config_params="
+			{
+			  \"firstName\": \"".$firstName."\",
+			  \"lastName\": \"".$lastName."\",
+			  \"emailAddress\": \"".$eMail."\"
+				}
+			";
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+   		
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return($result);
+	}
+
+	// -------------------------------------------------------------------------------
+	// Function to get user priviledges. 3 possibilities : Admin, EndUser and NoAccess
+	// -------------------------------------------------------------------------------
+
+	function rkGetUserPriviledges($clusterConnect,$userID)
+	{
+		$API="/api/internal/authorization?principals=".urlencode($userID);
+		
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		// If admin role is detected, return Admin
+		if($result->data[0]->admin->fullAdmin[0]=="Global:::All")
+		{
+			return "Admin";
+		} 
+		
+		// If not able to restore, no access detected, return NoAccess
+		if($result->data[0]->endUser->restore==NULL)
+		{
+			return "NoAccess";
+			
+		}
+		
+		// Otherwise, user is end user, return EndUser
+		else return "EndUser";
+	}
+
+ 	
+	// ==========================================================================
+	//                           Date & Time related functions
+	// ==========================================================================
 					
 	// ---------------------------------------------------------------------------
 	// Convert Rubrik human readable time to EPOCH time used in APIs
@@ -1394,7 +1720,6 @@
 		return date_format($time,'D M d H:i:s e Y');
 	}
 
-
 	// ---------------------------------------------------------------------------
 	// Convert SQL human readable time to timestamp
 	// ---------------------------------------------------------------------------
@@ -1411,80 +1736,17 @@
 	// Convert Epoch time to SQL human readable time
 	// ---------------------------------------------------------------------------
  
- 	function rkEpochToSQL($EpochTime)
+	function rkEpochToSQL($EpochTime)
 	{				
 		$SQLTime=DateTime::createFromFormat("U",$EpochTime);
 		return date_format($SQLTime,"Y-m-d\TH:i:s");
 	}
 	
 	// ---------------------------------------------------------------------------
-	// Get physical size of a snapshot (for restoration purpose)
-	// ---------------------------------------------------------------------------
- 
- 	function rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
- 	{
-		// 3 Steps 	
- 		// Step 1 : Get snapshot id based on time /api/v1/mssql/db/<id>/snapshot?after_time=<time1>&before_time=<time2>
-
-		$API="/api/v1/mssql/db/".$dbID."/snapshot?after_time=".urlencode($DateTime)."&before_time=".urlencode($DateTime);
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-		
- 		// Step 2 : Get snapable_id /api/internal/mssql/db/<id>/snappable_id
-
-		$snapshotID=json_decode($result)->data[0]->id;
-		
-		$API="/api/internal/mssql/db/".$dbID."/snappable_id";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		$snappableID=json_decode($result)->snappableId;
-
- 		// Step 3 : Get size of object /api/internal/snapshot/<id>/storage/stats?snappable_id=<id>
-
-		$API="/api/internal/snapshot/".$snapshotID."/storage/stats?snappable_id=".$snappableID;
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		$result = curl_exec($curl);
-		curl_close($curl);
-
-		return(json_decode($result)->logicalBytes);
-		
- 	}
-
-	// ---------------------------------------------------------------------------
 	// Get host id from hostname
 	// ---------------------------------------------------------------------------
  
- 	function rkGetHostID($clusterConnect,$hostName)
+	function rkGetHostID($clusterConnect,$hostName)
  	{
 		$API="/api/v1/host?hostname=".urlencode($hostName);
 
@@ -1563,7 +1825,7 @@
 	// Get Status of the support tunnel
 	// ---------------------------------------------------------------------------
  
- 	function rkGetSupportTunnel($clusterConnect)
+	function rkGetSupportTunnel($clusterConnect)
  	{
 		$API="/api/internal/cluster/me/node";
 
@@ -1588,7 +1850,7 @@
 	// Get Snapshots sizes (ingested, logical and physical) in the entire cluster
 	// ---------------------------------------------------------------------------
  
- 	function rkGetAllSnapshotInfo($clusterConnect)
+	function rkGetAllSnapshotInfo($clusterConnect)
  	{
 		$snapshots=array();
 		// 3 Steps 	
@@ -1654,7 +1916,7 @@
 	// Get list of unmanaged objects
 	// ---------------------------------------------------------------------------
  
- 	function rkGetUnmanaged($clusterConnect)
+	function rkGetUnmanaged($clusterConnect)
  	{
 		$API="/api/internal/unmanaged_object";
 
@@ -1679,7 +1941,7 @@
 	// Delete specific unmanaged snapshot
 	// ---------------------------------------------------------------------------
  
- 	function rkDeleteUnmanaged($clusterConnect,$ObjID)
+	function rkDeleteUnmanaged($clusterConnect,$ObjID)
  	{
 		$API="/api/internal/unmanaged_object/snapshot/bulk_delete";
 		$config_params="
@@ -1715,7 +1977,7 @@
 	// Get number of failed backup event occurence for an object
 	// ---------------------------------------------------------
  
- 	function rkGetFailedAmount($clusterConnect,$objectName)
+	function rkGetFailedAmount($clusterConnect,$objectName)
  	{
 		$API="/api/internal/event?status=Failure&event_type=Backup&object_name=".urlencode($objectName)."&show_only_latest=true&filter_only_on_latest=true";
 
@@ -1732,14 +1994,13 @@
 		curl_close($curl);
 
 		return json_decode($result);
-		
  	}
 
 	// ---------------------------------------------------------------------------
 	// Get total number of snapshots in cluster
 	// ---------------------------------------------------------------------------
  
- 	function rkGetSnapshotCount($clusterConnect)
+	function rkGetSnapshotCount($clusterConnect)
  	{
 		$API="/api/internal/vmware/vm/snapshot/count";
 
@@ -1887,12 +2148,16 @@
 			return "nothing to do";
 		}
 	}
-		
+
+	// ==========================================================================
+	//                           Reports related functions
+	// ==========================================================================
+
 	// ---------------------------------------------------------------------------
 	// Create report based on specifications
 	// ---------------------------------------------------------------------------
  
- 	function rkCreateReport($clusterConnect,$rptName,$rptSpecs)
+	function rkCreateReport($clusterConnect,$rptName,$rptSpecs)
  	{
 		$API="/api/internal/report";
 		
@@ -1921,7 +2186,7 @@
 	// Return report ID based on report name
 	// ---------------------------------------------------------------------------
 
- 	function rkGetReportID($clusterConnect,$reportName)
+	function rkGetReportID($clusterConnect,$reportName)
  	{
 		$API="/api/internal/report?name=".urlencode($reportName)."&sort_by=name&sort_order=asc";
 
@@ -1971,7 +2236,7 @@
 	}
 
 	// ---------------------------------------------------------------------------
-	// Refresh rerpot data
+	// Refresh rerpot data to current state
 	// ---------------------------------------------------------------------------
 
 	function rkRefreshReport($clusterConnect,$rptID)
@@ -1999,6 +2264,9 @@
 		return $info;
 	}
 
+	// ==========================================================================
+	//                           Non-Rubrik related functions
+	// ==========================================================================
 
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
@@ -2016,67 +2284,6 @@
 	function rkColorRed($string)
 	{
 		return ("\e[1;31m".$string."\033[0m");
-	}
-
-	// ---------------------------------------------------------------------------
-	// Function that creates SLA 
-	// ---------------------------------------------------------------------------
-
-	function rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
-	{
-		$API="/api/v1/sla_domain";
-
-		$config_params="
-			{
-				\"name\": \"".$slaName."\",
-				\"frequencies\": 
-				[
-					{
-						\"timeUnit\": \"Minute\",
-						\"frequency\": ".$HFreq.",
-						\"retention\": ".$HRet."
-					},
-					{
-						\"timeUnit\": \"Hourly\",
-						\"frequency\": ".$HFreq.",
-						\"retention\": ".$HRet."
-					},
-					{
-						\"timeUnit\": \"Daily\",
-						\"frequency\": ".$DFreq.",
-						\"retention\": ".$DRet."
-					},
-					{
-						\"timeUnit\": \"Monthly\",
-						\"frequency\": ".$MFreq.",
-						\"retention\": ".$MRet."
-					},
-					{
-						\"timeUnit\": \"Yearly\",
-						\"frequency\": ".$YFreq.",
-						\"retention\": ".$YRet."
-					}
-				]
-			}";
-
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_POST, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: '.strlen($config_params),'Accept: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
-		$result = json_decode(curl_exec($curl));
-		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
-		curl_close($curl);
-			
-		if($info==201) return TRUE;
-		else return FALSE;
 	}
 		
 	// ---------------------------------------------------------------------------
