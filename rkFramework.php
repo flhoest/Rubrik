@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.02                      //
+	//                   Rubrik Php Framework version 1.1                       //
 	//                     (c) 2018, 2019 - F. Lhoest                           //
 	//////////////////////////////////////////////////////////////////////////////
 	//                      Created on OS X with BBEdit                         //
@@ -15,9 +15,10 @@
 						\/             \/                  \/	Php Framework
 	*/
 
-	// Function index in alphabetical order (total 71)
+	// Function index in alphabetical order (total 76)
 	//------------------------------------------------
 
+	// day2text($days)
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
@@ -60,6 +61,8 @@
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
 	// rkGetNutanixVM($clusterConnect)
+	// rkGetNutanixVMSnaps($clusterConnect,$NutanixVMID)
+	// rkGetNutanixVMiD($clusterConnect,$NutanixVMName)
 	// rkGetObjectStatus($clusterConnect,$objectName)
 	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetReportID($clusterConnect,$reportName)
@@ -82,6 +85,8 @@
 	// rkGetWindowsFilesets($clusterConnect)
 	// rkGetmssqlSnapshot($clusterConnect,$mssqlID)
 	// rkGetvmwareVM($clusterConnect)
+	// rkGetvmwareVMId($clusterConnect,$vmName)
+	// rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
@@ -89,7 +94,7 @@
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
-		
+			
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -293,6 +298,55 @@
 		return json_decode($result);
 	}
 	
+	// -----------------------------------------------
+	// Function who returns Nutanix VM id from VM name
+	// -----------------------------------------------
+
+	function rkGetNutanixVMiD($clusterConnect,$NutanixVMName)
+	{
+		$API="/api/internal/nutanix/vm?limit=1&name=".urlencode($NutanixVMName)."&sort_by=name";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$id=json_decode($result);
+		$id=$id->data[0]->id;
+
+		return $id;
+	}
+
+	// ----------------------------------------------------
+	// Function who returns Nutanix VM snapshots from VM id
+	// ----------------------------------------------------
+
+	function rkGetNutanixVMSnaps($clusterConnect,$NutanixVMID)
+	{
+		$API="/api/internal/nutanix/vm/".urlencode($NutanixVMID)."/snapshot";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result)->data;
+	}
+	
 	// ---------------------------------------------------
 	// Function who returns all vmware VMs
 	// ---------------------------------------------------
@@ -315,6 +369,54 @@
 
 		return json_decode($result);
 	}
+	
+	
+	// ----------------------------------------------
+	// Function who returns vmware VM ID from VM name
+	// ----------------------------------------------
+
+	function rkGetvmwareVMId($clusterConnect,$vmName)
+	{
+		$API="/api/v1/vmware/vm?name=".urlencode($vmName);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result)->data[0]->id;
+	}
+	
+	// ----------------------------------------------------
+	// Function who returns vmware VM snapshots from VM id
+	// ----------------------------------------------------
+
+	function rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
+	{
+		$API="/api/v1/vmware/vm/".urlencode($vmwareVMID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		return json_decode($result)->snapshots;
+	}
+
 
 	// ---------------------------------------------------
 	// Function who returns all hyper-v VMs
@@ -372,7 +474,6 @@
 
 		return($result);
 	}
-
 
 	// ==========================================================================
 	//                           Fileset related functions
@@ -752,7 +853,7 @@
 	function rkGetObjectStatus($clusterConnect,$objectName)
 	{
 	
-		$API="/api/internal/event?&object_name=".$objectName."&show_only_latest=false&filter_only_on_latest=true&event_type=Backup";
+		$API="/api/internal/event?&object_name=".$objectName."&show_only_latest=true&filter_only_on_latest=true&event_type=Backup";
 
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
@@ -2302,6 +2403,23 @@
 
 		$factor = floor((strlen($bytes) - 1) / 3);
 		return sprintf("%.{$decimals}f %s", $bytes / pow($mod, $factor), $units[$system][$factor]);
+	}
+
+	// ---------------------------------------------------------------------------
+	// Convert number of days into years/months/days
+	// ---------------------------------------------------------------------------
+
+	function day2text($days)
+	{
+		$start_date = new DateTime();
+		$end_date = (new $start_date)->add(new DateInterval("P{$days}D") );
+		$dd = date_diff($start_date,$end_date);
+
+		$data="";
+		if($dd->y) $data=$dd->y." years ";
+		if($dd->m) $data.=$dd->m." months ";
+		if($dd->d) $data.=$dd->d." days";
+		return $data;
 	}
 
 ?>
