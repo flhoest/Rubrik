@@ -15,7 +15,7 @@
 						\/             \/                  \/	Php Framework
 	*/
 
-	// Function index in alphabetical order (total 76)
+	// Function index in alphabetical order (total 80)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -56,6 +56,7 @@
 	// rkGetHostID($clusterConnect,$hostName)
 	// rkGetHumanTime($timeStamp)
 	// rkGetHypervVM($clusterConnect)
+	// rkGetLastSnapDuration($clusterConnect,$vmName)
 	// rkGetMSSQL($clusterConnect)
 	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
@@ -67,10 +68,13 @@
 	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetReportID($clusterConnect,$reportName)
 	// rkGetRunway($clusterConnect)
+	// rkGetSLAStorage($clusterConnect,$SLAid)
 	// rkGetSLAid($clusterConnect,$SLAname)
 	// rkGetSLAname($clusterConnect,$SLAid)
+	// rkGetSLAs($clusterConnect)
 	// rkGetSnapshotCount($clusterConnect)
 	// rkGetSnapshotFromFilesetID($clusterConnect,$filesetID)
+	// rkGetSnapshotSize($clusterConnect,$vmID,$snapID)
 	// rkGetSpecificMSSQL($clusterConnect,$sqlID)
 	// rkGetSupportToken($clusterConnect)
 	// rkGetSupportTunnel($clusterConnect)
@@ -94,7 +98,7 @@
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
-			
+				
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -1298,6 +1302,64 @@
 	}
 
 	// ---------------------------------------------------
+	// Funtion that return SLA total storage usage in bytes
+	// ---------------------------------------------------
+
+	function rkGetSLAStorage($clusterConnect,$SLAid)
+	{
+		$API="/api/internal/stats/sla_domain_storage/".$SLAid;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->value;
+		return($result);
+	}
+
+	// ----------------------------------------
+	// Funtion that return all SLAs and SLA IDs
+	// ----------------------------------------
+
+	function rkGetSLAs($clusterConnect)
+	{
+		$API="/api/v2/sla_domain?sort_by=name&sort_order=asc";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		$result=json_decode($result)->data;
+		$return_value=array();
+
+		// Parse result to get ID and Name
+		
+		for($i=0;$i<count($result);$i++)
+		{
+			$return_value[$i]["id"]=$result[$i]->id;
+			$return_value[$i]["name"]=$result[$i]->name;	
+		}
+		
+		return($return_value);
+	}
+
+	// ---------------------------------------------------
 	// Function converts SLA Name to SLA ID
 	// ---------------------------------------------------
 
@@ -1946,6 +2008,55 @@
 		else return(FALSE);
 		
  	}
+ 	
+	// ---------------------------------------------------------------------------------
+	// Get size of specific Snapshot (ingested, logical and physical) from a specific vm
+	// tested with vmware and Nutanix VMs
+	// Note : you cannot get the storage info for an archived object ! be sure cloudStorage is set to 0
+	// ---------------------------------------------------------------------------------
+
+	function rkGetSnapshotSize($clusterConnect,$vmID,$snapID)
+	{
+		$API="/api/internal/snapshot/".urlencode($snapID)."/storage/stats?snappable_id=".urlencode($vmID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+
+	// -----------------------------------------------------------------------------------
+	// Get last snapshot duration from an object name. Taken from event log of the cluster 	
+	// -----------------------------------------------------------------------------------
+
+	function rkGetLastSnapDuration($clusterConnect,$vmName)
+	{
+		$API="/api/internal/event_series?status=Success&event_type=Backup&object_name=".urlencode($vmName);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result)->data;	
+	}
+
 
 	// ---------------------------------------------------------------------------
 	// Get Snapshots sizes (ingested, logical and physical) in the entire cluster
@@ -1972,7 +2083,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Ingested"]=rkFormatBytes(json_decode($result)->value);
+		$snapshots["Ingested"]=json_decode($result)->value;
 
  		// Step 2 : Get logical snapshots size -> /api/internal/stats/snapshot_storage/logical
 		
@@ -1990,7 +2101,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Logical"]=rkFormatBytes(json_decode($result)->value);
+		$snapshots["Logical"]=json_decode($result)->value;
 
  		// Step 3 : Get physical snapshots size -> /api/internal/stats/snapshot_storage/physical
 
@@ -2008,7 +2119,7 @@
 		$result = curl_exec($curl);
 		curl_close($curl);
 
-		$snapshots["Physical"]=rkFormatBytes(json_decode($result)->value);
+		$snapshots["Physical"]=json_decode($result)->value;
 						
  		return($snapshots);
  	}
