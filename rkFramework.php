@@ -15,7 +15,7 @@
 						\/             \/                  \/	Php Framework
 	*/
 
-	// Function index in alphabetical order (total 80)
+	// Function index in alphabetical order (total 82)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -44,6 +44,7 @@
 	// rkGetBlackout($clusterConnect)
 	// rkGetClusterDetails($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
+	// rkGetDataReport($clusterConnect,$rptID)
 	// rkGetEpoch($dateString)
 	// rkGetEpoch2($dateString)
 	// rkGetFailedAmount($clusterConnect,$objectName)
@@ -67,6 +68,7 @@
 	// rkGetObjectStatus($clusterConnect,$objectName)
 	// rkGetRecoveryStatus($clusterConnect,$object,$jobID)
 	// rkGetReportID($clusterConnect,$reportName)
+	// rkGetReportStatus($clusterConnect,$reportName)
 	// rkGetRunway($clusterConnect)
 	// rkGetSLAStorage($clusterConnect,$SLAid)
 	// rkGetSLAid($clusterConnect,$SLAname)
