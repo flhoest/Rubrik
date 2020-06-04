@@ -1,8 +1,8 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.1                       //
-	//                     (c) 2018, 2019 - F. Lhoest                           //
+	//                   Rubrik Php Framework version 1.2                       //
+	//                     (c) 2018 - 2020 - F. Lhoest                          //
 	//////////////////////////////////////////////////////////////////////////////
 	//                      Created on OS X with BBEdit                         //
 	//////////////////////////////////////////////////////////////////////////////
@@ -17,14 +17,6 @@
 
 	// Function index in alphabetical order (total 82)
 	//------------------------------------------------
-
-	// day2text($days)
-	// getRubrikAvailableStorage($clusterConnect)
-	// getRubrikClusterID($clusterConnect)
-	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
-	// Function index in alphabetical order (total 82)
-	//------------------------------------------------
-
 	// day2text($days)
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
