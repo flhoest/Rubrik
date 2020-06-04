@@ -22,6 +22,13 @@
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
 	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	// Function index in alphabetical order (total 82)
+	//------------------------------------------------
+
+	// day2text($days)
+	// getRubrikAvailableStorage($clusterConnect)
+	// getRubrikClusterID($clusterConnect)
+	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 	// getRubrikNodeCount($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
@@ -99,8 +106,8 @@
 	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
-	// rkSetBanner($clusterConnect,$bannerText)
-				
+	// rkSetBanner($clusterConnect,$bannerText)				
+
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
