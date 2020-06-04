@@ -124,7 +124,7 @@ rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 rkRefreshHost($clusterConnect,$hostName)
 rkRefreshReport($clusterConnect,$rptID)
 rkSetBanner($clusterConnect,$bannerText)
-````
+```` 
 
 ### Explanation
 
