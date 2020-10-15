@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.3                       //
+	//                   Rubrik Php Framework version 1.31                      //
 	//                     (c) 2018 - 2020 - F. Lhoest                          //
 	//////////////////////////////////////////////////////////////////////////////
 	//                      Created on OS X with BBEdit                         //
@@ -15,7 +15,7 @@
 							\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 83)
+	// Function index in alphabetical order (total 85)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -60,8 +60,10 @@
 	// rkGetLastSnapDuration($clusterConnect,$vmName)
 	// rkGetMSSQL($clusterConnect)
 	// rkGetMSSQLInstanceID($clusterConnect,$dbName,$dbHost)
+	// rkGetMSSQLLastRecoveryPoint($clusterConnect,$msSQLID)
 	// rkGetMSSQLRecoveryStatus($clusterConnect,$requestID)
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
+	// rkGetMSSQLdbID($clusterConnect,$sqlInstanceID,$sqlDBName)
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
 	// rkGetNutanixVM($clusterConnect)
 	// rkGetNutanixVMSnaps($clusterConnect,$NutanixVMID)
@@ -101,7 +103,7 @@
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
-							
+									
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -955,6 +957,31 @@
 	// ==========================================================================
 
 	// ---------------------------------------------------
+	// Function who returns The lastest snapshot details
+	// ---------------------------------------------------
+
+	function rkGetMSSQLLastRecoveryPoint($clusterConnect,$msSQLID)
+	{
+		$API="/api/v1/mssql/db/".urldecode($msSQLID)."/snapshot";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+
+		$result = json_decode($result)->data[0];
+		curl_close($curl);
+
+		return($result);
+	}
+
+	// ---------------------------------------------------
 	// Function who returns all MS SQL object details
 	// ---------------------------------------------------
 
@@ -1057,6 +1084,34 @@
 		}
 		return($dbID);
 	}
+
+	// ---------------------------------------------------
+	// Function who returns MS SQL DB ID from instance ID
+	// ---------------------------------------------------
+	
+	function rkGetMSSQLdbID($clusterConnect,$sqlInstanceID,$sqlDBName)
+	{
+		$API="/api/v1/mssql/db?instance_id=".urlencode($sqlInstanceID)."&name=".$sqlDBName;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+
+		$result = json_decode($result)->data;
+		curl_close($curl);
+
+		return($result[0]->id);		
+	}
+	
+
+
 
 	// --------------------------------------------------------
 	// Function who returns MS SQL Instance ID from Name / Host
@@ -1591,8 +1646,12 @@
 	// Function get locally defined users
 	// ---------------------------------------------------
 
+	// This function is deprecated in CDM > 5.2, users have been moved to principals instead
+
 	function rkGetUsers($clusterConnect)
 	{
+		$cdm_version=rkGetClusterVersion($clusterConnect);
+
 		$API="/api/internal/user";
 		
 		$curl = curl_init();
@@ -1606,7 +1665,7 @@
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($curl);
 		curl_close($curl);
-		
+		var_dump($result);
 		return(json_decode($result));
 	}
 
