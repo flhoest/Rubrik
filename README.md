@@ -122,6 +122,7 @@ rkGetmssqlSnapshot($clusterConnect,$mssqlID)
 rkGetvmwareVM($clusterConnect)
 rkGetvmwareVMId($clusterConnect,$vmName)
 rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
+rkIntegrityResult($clusterConnect,$eventID)
 rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 rkMakeAdminUser($clusterConnect,$userID)
@@ -129,7 +130,8 @@ rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 rkRefreshHost($clusterConnect,$hostName)
 rkRefreshReport($clusterConnect,$rptID)
 rkSetBanner($clusterConnect,$bannerText)
-```` 
+rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
+````
 
 ### Explanation
 
