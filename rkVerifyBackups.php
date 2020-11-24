@@ -6,7 +6,7 @@
 	$clusterConnect=array(
 		"username" => "username",
 		"password" => "password",
-		"ip" => "cluster_ip"
+		"ip" => "<cluster ip>"
 	);
 
 	$objectID="NutanixVirtualMachine:::86be7f0c-2b98-4e03-93d9-57f06e419eb7-vm-c1dd1716-7d54-4121-9434-1a12ea0fb37e";
@@ -59,9 +59,20 @@
 	$content=file_get_contents($tempFolder."/".$eventID);
 	system("rm ".$tempFolder."/".$eventID);
 
+	// Compute time taken to verify snapshot
+	$startTime=$result->startTime;
+	$endTime=$result->endTime;
+
+	$dateFormat='H:i:s';
+	$startTS=rkGetTimeStamp($startTime);
+	$endTS=rkGetTimeStamp($endTime);
+	$duration=$endTS-$startTS;
+	$duration=date($dateFormat,$duration);	
+	
 	$tmp=explode(",",$content);
 	$integrityStatus=str_replace("\"","",$tmp[16]);
 	$objectName=str_replace("\"","",$tmp[11]);
 	
 	print("Object ".rkColorOutput($objectName)." integrity check is ".rkColorOutput($integrityStatus."\n"));
+	print("Backup verified in ".rkColorOutput($duration)." (hh:mm:ss)\n\n");
 ?>
