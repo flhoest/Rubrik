@@ -1,8 +1,8 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.31                      //
-	//                     (c) 2018 - 2020 - F. Lhoest                          //
+	//                   Rubrik Php Framework version 1.4                       //
+	//                     (c) 2018-2020 - F. Lhoest                            //
 	//////////////////////////////////////////////////////////////////////////////
 	//                      Created on OS X with BBEdit                         //
 	//////////////////////////////////////////////////////////////////////////////
@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/ Php Framework
+						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 85)
+	// Function index in alphabetical order (total 87)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -96,6 +96,7 @@
 	// rkGetvmwareVM($clusterConnect)
 	// rkGetvmwareVMId($clusterConnect,$vmName)
 	// rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
+	// rkIntegrityResult($clusterConnect,$eventID)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
@@ -103,7 +104,8 @@
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
-									
+	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
+										
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -2553,8 +2555,6 @@
 		else return FALSE;
  	}
  	
- 	
- 	
 	// ---------------------------------------------------------------------------
 	// Return report ID based on report name
 	// ---------------------------------------------------------------------------
@@ -2698,6 +2698,86 @@
 
 		return($res);	
 	}
+
+	// ==========================================================================
+	//                       Verification related functions
+	// ==========================================================================
+	
+	// -----------------------------------------------------------
+	// Function who's verifying backup integrity of a given object
+	// -----------------------------------------------------------
+	
+	function rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
+	{
+		// **** W A R N I N G : this function is only supported from CDM 5.3 and above **** //
+		// Note : this activity is CPU intensive and can take long time to complete. 
+
+ 		$API="/api/v1/backup/verify";
+
+		// if snapid has been passed, use it
+		if($snapID)
+		{
+			$config_params="
+					{
+					  \"objectId\": \"".$objectID."\",
+					  \"snapshotIdsOpt\": [
+						\"".$snapID."\"
+					  ]
+				}";
+		}
+		
+		// Else the system will use the last one taken and available
+		else
+		{
+					$config_params="
+					{
+					  \"objectId\": \"".$objectID."\"
+				}";
+		}
+		
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		$error=curl_errno($curl);
+		curl_close($curl);
+
+		return $result;
+	}
+
+	// ---------------------------------------------------------------------
+	// Function who's returning the verification status (progress or result)
+	// ---------------------------------------------------------------------
+	
+	function rkIntegrityResult($clusterConnect,$eventID)
+	{	
+		// **** W A R N I N G : this function is only supported from CDM 5.3 and above **** //
+		$API="/api/v1/backup/verify/".urlencode($eventID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		curl_close($curl);
+
+		return $result;
+	}
+	
 	
 
 	// ==========================================================================
