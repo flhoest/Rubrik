@@ -27,7 +27,7 @@
 	$padSize=140;
 	
 	// Do you want to display the last backup event from the cluster ?
-	$displayEvents=true;
+	$displayEvents=TRUE;
 
 	// Number of events to retieve from the cluster
 	$lastEventCount=5;
@@ -113,12 +113,14 @@
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 
 	$availableSpace=json_decode(getRubrikAvailableStorage($clusterConnect));
-	print("| ".str_pad("Available Space : ".rkColorOutput(rkFormatBytes($availableSpace->value)),$padSize," ",STR_PAD_RIGHT)." |\n");
-	print("| ".str_pad("Cluster Runway : ".rkColorOutput(json_decode(getRubrikRunway($clusterConnect))->days." day(s)"),$padSize," ",STR_PAD_RIGHT)." |\n");
+	
+	
+	print("| ".str_pad("Available Space : ".rkColorOutput(rkFormatBytes($availableSpace)),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Cluster Runway : ".rkColorOutput(json_decode(rkGetRunway($clusterConnect))." day(s)"),$padSize," ",STR_PAD_RIGHT)." |\n");
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
-	print("| ".str_pad("Snapshots Ingested : ".rkColorOutput($snapshots["Ingested"]),$padSize," ",STR_PAD_RIGHT)." |\n");
-	print("| ".str_pad("Logical Snapshots size : ".rkColorOutput($snapshots["Logical"]),$padSize," ",STR_PAD_RIGHT)." |\n");
-	print("| ".str_pad("Physical Snapshots size : ".rkColorOutput($snapshots["Physical"]),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Snapshots Ingested : ".rkColorOutput(rkFormatBytes($snapshots["Ingested"])),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Logical Snapshots size : ".rkColorOutput(rkFormatBytes($snapshots["Logical"])),$padSize," ",STR_PAD_RIGHT)." |\n");
+	print("| ".str_pad("Physical Snapshots size : ".rkColorOutput(rkFormatBytes($snapshots["Physical"])),$padSize," ",STR_PAD_RIGHT)." |\n");
 	
 	print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 
@@ -148,7 +150,7 @@
 
 	if($displayEvents)
 	{
-		print("| ".str_pad("Last ".rkColorOutput($lastEventCount)." backup events",$padSize-11," ",STR_PAD_RIGHT)." |\n");
+		print("| ".str_pad("Last ".rkColorOutput($lastEventCount)." backup events",$padSize," ",STR_PAD_RIGHT)." |\n");
 		print("+-".str_pad("",$padSize-11,"-",STR_PAD_RIGHT)."-+\n");
 		$events=json_decode(getRubrikEvents($clusterConnect,$lastEventCount,"Backup","",""));
 	
