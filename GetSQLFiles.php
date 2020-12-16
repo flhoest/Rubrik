@@ -2,7 +2,7 @@
 	include_once "rkFramework.php";
                             
 	$rkEdge=array(
-				0=>"192.168.8.1"
+				0=>"10.0.2.10"
 	);
 
 	// List all DB required to dump to disk
@@ -10,25 +10,39 @@
 	$DBs=array(
 		0 => array(
 				"sourceRubrik" => $rkEdge[0],
-				"hostName" => "192.168.1.1",
-				"instanceName" => "SQLEXPRESS",
-				"dbName" => "FredTest"
+				"hostName" => "sql-s1.rubrik.lab",
+				"instanceName" => "MSSQLSERVER",  
+				"dbName" => "AdventureWorks"
 				),
 		1 => array(
 				"sourceRubrik" => $rkEdge[0],
-				"hostName" => "192.168.1.1",
-				"instanceName" => "SQLEXPRESS",
-				"dbName" => "FredTest_2"
+				"hostName" => "sql-s1.rubrik.lab",
+				"instanceName" => "MSSQLSERVER",
+				"dbName" => "model"
 				)				
 			);
 
 	$DBs=array_values($DBs);                            
-	
-		
+
+	// For Windows only
+	// GNU Wget for Windows is required for this script to work -> https://eternallybored.org/misc/wget/
+	$wgetPath="C:\\";
+
+	// Detects what OS the script is running on. Either Windows or Linux family	
+	$os=PHP_OS;
+
+	if($os=="WINNT" && !file_exists($wgetPath."wget.exe"))
+	{
+		print(rkColorRed("ERROR, WGET.EXE not found in ".$wgetPath.".\n\n"));
+		exit();
+	} 	
+			
 	// ------------------ New function ----------------------
 
 	function rkDownloadSQLSnap($clusterConnect,$sqlHostName,$sqlInstanceName,$sqlDBName,$targetPath)
 	{
+		global $os,$wgetPath;
+		
 		// Get MSSQLID
 
 		$mssqlInstanceID=rkGetMSSQLInstanceID($clusterConnect,$sqlInstanceName,$sqlHostName);
@@ -107,12 +121,25 @@
 
 		// download files according to $url 
 
-		print(rkColorOutput('Done!      '));
-		print("\nWriting files to disk ... ");
-		system("wget -q --no-check-certificate -O ".$targetPath."/".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip ".$url." > /dev/null");
-		print(rkColorOutput('Done!      '));
-		print("\nFile ".rkColorOutput($targetPath."/".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip")." saved to disk.\n\n");
-
+		if($os=="WINNT")
+		{
+			// Windows does not support ":" as part of the file name, change with "_"
+			//$tempFileName=str_replace(":","_",$eventID);
+			print(rkColorOutput('Done!      '));
+			print("\nWriting files to disk ... ");
+			system($wgetPath."wget.exe -q --no-check-certificate -O ".$targetPath."\\".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip ".$url." > NULL");
+			print(rkColorOutput('Done!      '));
+			print("\nFile ".rkColorOutput($targetPath."\\".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip")." saved to disk.\n\n");
+		}	
+		else
+		{
+			// If not Windows, we are in UNIX Family so we are using /
+			print(rkColorOutput('Done!      '));
+			print("\nWriting files to disk ... ");
+			system("wget -q --no-check-certificate -O ".$targetPath."/".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip ".$url." > /dev/null");
+			print(rkColorOutput('Done!      '));
+			print("\nFile ".rkColorOutput($targetPath."/".$sqlHostName."-".$sqlInstanceName."-".$sqlDBName.".zip")." saved to disk.\n\n");
+		}	
 		return $url;
 	}
 
@@ -137,9 +164,7 @@
 						"ip" => $DBs[$i]["sourceRubrik"]
                             );
                             
-		rkDownloadSQLSnap($clusterConnect,$DBs[$i]["hostName"],$DBs[$i]["instanceName"],$DBs[$i]["dbName"],".");
+		rkDownloadSQLSnap($clusterConnect,$DBs[$i]["hostName"],$DBs[$i]["instanceName"],$DBs[$i]["dbName"],getcwd());
 	}
 
 ?>
-
-
