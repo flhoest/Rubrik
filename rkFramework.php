@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 87)
+	// Function index in alphabetical order (total 89)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -25,6 +25,7 @@
 	// getRubrikNodeCount($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
+	// printReport($data)
 	// rkCheckAccess($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
@@ -101,11 +102,12 @@
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
 	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
+	// rkObjectNametoID($clusterConnect,$name)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-										
+											
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -880,6 +882,65 @@
 
 		return json_decode($result);
 	}
+	
+	// ---------------------------------------------
+	// Function who returns ID of a given object
+	// ---------------------------------------------
+
+	function rkObjectNametoID($clusterConnect,$name)
+	{
+		// Parse Nutanix objects
+
+		$nutanixVMs=rkGetNutanixVM($clusterConnect);
+		for($i=0;$i<count($nutanixVMs->data);$i++)
+		{
+// 			print("VM name : ".$nutanixVMs->data[$i]->name." -> ID : ".$nutanixVMs->data[$i]->id."\n");
+			if($name==$nutanixVMs->data[$i]->name)
+			{
+				return $nutanixVMs->data[$i]->id;
+			}
+		}
+
+		// Parse vmware objects
+
+		$vmwareVMs=rkGetvmwareVM($clusterConnect);
+		for($i=0;$i<count($vmwareVMs->data);$i++)
+		{
+// 			print("VM name : ".$vmwareVMs->data[$i]->name." -> ID : ".$vmwareVMs->data[$i]->id."\n");
+			if($name==$vmwareVMs->data[$i]->name)
+			{
+				return $vmwareVMs->data[$i]->id;
+			}
+		}
+
+		// Parse MS SQL 
+
+		$mssqlDB=json_decode(rkGetMSSQL($clusterConnect));
+		for($i=0;$i<count($mssqlDB->data);$i++)
+		{
+// 			print("SQL DB name : ".$mssqlDB->data[$i]->name." -> ID : ".$mssqlDB->data[$i]->id."\n");
+			if($name==$mssqlDB->data[$i]->name)
+			{
+				return $mssqlDB->data[$i]->id;
+			}
+		}
+		
+		// Parse FileSets
+		
+		$fileSets=rkGetFileSet($clusterConnect);
+		for($i=0;$i<count($fileSets->data);$i++)
+		{
+// 			print("File Set name : ".$fileSets->data[$i]->name." -> ID : ".$fileSets->data[$i]->id."\n");
+			if($name==$fileSets->data[$i]->name)
+			{
+				return $fileSets->data[$i]->id;
+			}
+		}
+
+		// If not found, return bool(false)
+		return FALSE;
+	}
+	
 	
 	// ==========================================================================
 	//                           Storage related functions
@@ -2779,11 +2840,102 @@
 	}
 	
 	
-
 	// ==========================================================================
 	//                           Non-Rubrik related functions
 	// ==========================================================================
 
+	// ---------------------------------------------------------
+	// Function to nicely display the results of integrity check
+	// ---------------------------------------------------------
+	
+	/*	
+	Format for $data must be an array with the following syntax :
+	
+	$result=array(0 =>
+				array(	"objectName" => "string",
+						"objectID" => "string",
+						"objectSnapID" => "string",
+						"processDuration" => "string",
+						"integrityStatus" => "string"
+						"size" => "string",
+						"duration" => "string",
+						"recoveryPoint" => "string"
+						)
+					);
+	
+	Sample data : 
+	
+	$result=array(0 =>
+				array(	"objectName" => "GOLD - CentOS 7.6",
+						"objectID" => "NutanixVirtualMachine:::86be7f0c-2b98-4e03-93d9-57f06e419eb7-vm-c1dd1716-7d54-4121-9434-1a12ea0fb37e",
+						"objectSnapID" => "6c47a493-60b8-4b13-9787-92e0066ccad6",
+						"processDuration" => "00:07:29",
+						"integrityStatus" => "PASSED",
+						"size" => "85899345920",
+						"duration" => "07:53:27",
+						"recoveryPoint" => "Thu Nov 26 00:00:02 UTC 2020"
+						)
+					);
+						
+	Note : processDuration is using hh:mm:ss
+	
+	Usually, this array is filled in by a succcessive calls to rkStartIntegrityChk($clusterConnect,$objectID)
+	and rkIntegrityResult($clusterConnect,$eventID)
+
+	Sample output : 
+	
+/========== Object Name ==========|============= Snapshot ID =============|=== Size ===|======== Recovery Point =======|= Duration (hh:mm:ss) =|== Integrity ==\
+| Administrator                   | e4af21af-8d72-4a93-8cec-48afe8378a27  |  909.03 MB |  Tue Dec 01 11:02:56 UTC 2020 |        00:01:15       |     PASSED    |
+| All Files                       | c70b7639-a008-4e97-ad5f-35141cff073b  |  32.38 GB  |  Mon Nov 30 23:00:01 UTC 2020 |        00:08:18       |     PASSED    |
+| BE-INTRANODE2                   | fc177929-3345-4c1a-9521-a4b83c38fa17  |  21.47 GB  |  Tue Dec 01 14:12:43 UTC 2020 |        00:12:14       |     PASSED    |
+| Era                             | 33eb5672-908e-472b-8f5d-1d57f85f1fd3  |  53.69 GB  |  Mon Nov 30 23:02:07 UTC 2020 |        00:05:25       |     PASSED    |
+| Gustavo - CentOS                | 0c747086-7d34-41dd-b466-7e7ef55ed676  |  32.21 GB  |  Mon Nov 30 23:04:31 UTC 2020 |        00:03:21       |     PASSED    |
+| MSDS-IPAM                       | bceff719-b8eb-4959-9d7c-f35d837d214b  |  32.21 GB  |  Mon Nov 30 23:03:49 UTC 2020 |        00:08:18       |     PASSED    |
+| Win2019                         | 3bda0eb1-e667-41c7-af69-a710ff8221ac  |  48.25 GB  |  Mon Nov 30 23:00:03 UTC 2020 |        00:07:34       |     PASSED    |
+| be-ntnx-pc.it.pccwglobal.com    | 991b97aa-13fc-448d-adb5-b240b00d9ccc  |  689.46 GB |  Tue Dec 01 15:05:09 UTC 2020 |        00:55:27       |     PASSED    |
+| rsync-server                    | 2905d02e-216f-4c96-90d9-69f02d5c43aa  |  118.11 GB |  Mon Nov 30 23:00:02 UTC 2020 |        00:19:52       |     PASSED    |
+|==============================================================================================================================================================|
+|                                                                                                Total processing time |        02:01:44       |               |
+\==============================================================================================================================================================/	*/
+	
+	function printReport($data)
+	{
+		// Init total timestap to zero
+		$totalTime=0;
+
+		print("\n");
+		print("/========== ".rkColorOutput("Object Name")." ==========|============= ".rkColorOutput("Snapshot ID")." =============|");
+		print("=== ".rkColorOutput("Size")." ===|======== ".rkColorOutput("Recovery Point")." =======|= ".rkColorOutput("Duration (hh:mm:ss)")." =|== ".rkColorOutput("Integrity")." ==\\\n");
+
+		for($i=0;$i<count($data);$i++)
+		{
+			$totalTime+=strtotime($data[$i]["processDuration"]);	
+	
+			print("| ");
+			print(str_pad($data[$i]["objectName"], 32," ", STR_PAD_RIGHT));
+			print("| ");
+			print(str_pad($data[$i]["objectSnapID"], 38," ", STR_PAD_RIGHT));
+			print("| ");
+			print(str_pad(rkFormatBytes($data[$i]["size"]), 11," ", STR_PAD_BOTH));
+			print("| ");
+			print(str_pad($data[$i]["recoveryPoint"], 30," ", STR_PAD_BOTH));
+			print("| ");
+			print(str_pad($data[$i]["processDuration"], 22," ", STR_PAD_BOTH));
+			print("| ");
+			print(str_pad($data[$i]["integrityStatus"], 14," ", STR_PAD_BOTH));
+			print("|\n");
+		}	
+// 		print("|=================================|=======================================|============|===============================|===========================|===============|\n");
+		print("|==============================================================================================================================================================|\n");
+		print("|");
+		print(str_pad(" ".rkColorOutput("Total processing time")." ",129," ",STR_PAD_LEFT));
+		print("| ");
+		print(str_pad(rkColorOutput(date('H:i:s',$totalTime)),33," ",STR_PAD_BOTH));
+		print("|               |\n");
+// 		print("\=================================|=======================================|============|===============================|===========================|===============/\n");
+		print("\==============================================================================================================================================================/\n");
+	}
+	
 	// ---------------------------------------------------------------------------
 	// Display a string in Rubrik Cyan!!!
 	// ---------------------------------------------------------------------------
