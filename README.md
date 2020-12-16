@@ -1,5 +1,5 @@
 # Rubrik API Framework (written in Php)
->Check my supporting blog post about it : https://flhoest.blogspot.com/2019/05/rubrik-php-framework-for-enhancing.html
+>Check my supporting blog post about it : https://www.lets-talk-about.tech/2019/05/rubrik-php-framework-for-enhancing.html
 
 ```
 This documentation is under review and considered as draft!
