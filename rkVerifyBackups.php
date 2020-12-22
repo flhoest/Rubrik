@@ -1,12 +1,29 @@
 <?php
+
+	//////////////////////////////////////////////////////////////////////////////
+	//            Rubrik Php backup verifier - rkVerifyBackups.php v 1.0         //
+	//                        (c) 2020 - F. Lhoest                              //
+	//////////////////////////////////////////////////////////////////////////////
+	
+	/*				__________        ___.            .__  __    
+					\______   \ __ __ \_ |__  _______ |__||  | __
+					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
+					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
+					 |____|_  /|____/  |___  / |__|   |__||__|_ \
+						\/             \/                  \/	
+	*/
+
+	// This script verifies the snapshot integrity of a given object It currently
+	// supports vmware VMS, Nutanix AHV VMs and Filesets. More objects to come
+
 	// Include section
 	include_once 'rkFramework.php';
 	include_once 'rkCredentials.php';
 
 	$tempFolder=sys_get_temp_dir();
 
-	//$object="Centos-vm1";
-	$object="Win10-vm1";
+	$object="Centos-vm1";
+	//$object="Win10-vm1";
 	
 	// Detects what OS the script is running on. Either Windows or Linux family	
 	$os=PHP_OS;
