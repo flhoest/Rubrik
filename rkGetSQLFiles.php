@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//               Rubrik Php Download SQL - rkDownloadSQL.php v 1.0          //
+	//               Rubrik Php Download SQL - rkGetSQLFiles.php v 1.0          //
 	//                        (c) 2020 - F. Lhoest                              //
 	//////////////////////////////////////////////////////////////////////////////
 	
@@ -10,7 +10,7 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/	
+						\/             \/                  \/	
 	*/
 
 	// This script is downloading the DB files for a given instance DB based on 
