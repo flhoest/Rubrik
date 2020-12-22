@@ -1,4 +1,23 @@
 <?php
+
+	//////////////////////////////////////////////////////////////////////////////
+	//               Rubrik Php Download SQL - rkDownloadSQL.php v 1.0          //
+	//                        (c) 2020 - F. Lhoest                              //
+	//////////////////////////////////////////////////////////////////////////////
+	
+	/*				__________        ___.            .__  __    
+					\______   \ __ __ \_ |__  _______ |__||  | __
+					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
+					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
+					 |____|_  /|____/  |___  / |__|   |__||__|_ \
+							\/             \/                  \/	
+	*/
+
+	// This script is downloading the DB files for a given instance DB based on 
+	// the latest SQL Snapshot. It produces a zip file containing the data and 
+	// transaction logs files. Once downloaded, these files can be easily imported 
+	// into a brand new SQL server installation with MS SQL Studio.
+
 	include_once "rkFramework.php";
                             
 	$rkEdge=array(
@@ -159,12 +178,12 @@
 		// construct clusterConnect
 		
 		$clusterConnect=array(
-						"username" => "user",
-						"password" => "password",
+						"username" => "admin",
+						"password" => "Welcome10!Rubrik",
 						"ip" => $DBs[$i]["sourceRubrik"]
                             );
                             
-		rkDownloadSQLSnap($clusterConnect,$DBs[$i]["hostName"],$DBs[$i]["instanceName"],$DBs[$i]["dbName"],getcwd());
+		rkDownloadSQLSnap($clusterConnect,$DBs[$i]["hostName"],$DBs[$i]["instanceName"],$DBs[$i]["dbName"],getcwd()."\SQL-Dump");
 	}
 
 ?>
