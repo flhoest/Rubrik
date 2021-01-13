@@ -1,12 +1,12 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.5                       //
+	//                   Rubrik Php Framework version 1.51                      //
 	//                     (c) 2018-2020 - F. Lhoest                            //
 	//////////////////////////////////////////////////////////////////////////////
 	//                     Created on macOS with BBEdit                         //
 	//////////////////////////////////////////////////////////////////////////////
-	
+		
 	/*				__________        ___.            .__  __    
 					\______   \ __ __ \_ |__  _______ |__||  | __
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
@@ -15,7 +15,7 @@
 						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 89)
+	// Function index in alphabetical order (total 90)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -98,6 +98,7 @@
 	// rkGetvmwareVMId($clusterConnect,$vmName)
 	// rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
 	// rkIntegrityResult($clusterConnect,$eventID)
+	// rkLDAPAdd($clusterConnect,$LDAP)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
@@ -107,7 +108,7 @@
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-											
+												
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -2759,6 +2760,66 @@
 
 		return($res);	
 	}
+	
+	// ----------------------------------------------------------
+	// Function who's creating an LDAP auth source in the cluster
+	// ----------------------------------------------------------
+
+	/*
+		The $LDAP variable must have the following format : 
+
+		$LDAP=array(
+		"bindUserName" => "CN=My Service Account,OU=My OU,DC=my,DC=domain,DC=com",
+		"bindUserPassword" => "ServiceAccountPassword",
+		"authServer" => "DC_IP",
+		"name" => "My AD"
+		);
+	*/
+
+	function rkLDAPAdd($clusterConnect,$LDAP)
+	{
+		// Prepare the payload with the correct syntax
+		$postPayload=
+			"{
+			  \"bindUserName\": \"".$LDAP["bindUserName"]."\",
+			  \"bindUserPassword\": \"".$LDAP["bindUserPassword"]."\",
+			  \"authServers\": [
+				\"ldap://".$LDAP["authServer"].":636\"
+			  ],
+			  \"name\": \"".$LDAP["name"]."\",
+			  \"advancedOptions\": {
+				\"groupSearchFilter\": \"(&(objectcategory=group))\",
+				\"groupMemberAttribute\": \"member\",
+				\"groupMembershipAttribute\": \"memberOf\",
+				\"userSearchFilter\": \"(&(objectcategory=person)(objectclass=user)(!(useraccountcontrol:1.2.840.113556.1.4.803:=2)))\",
+				\"userNameSearchAttribute\": \"sAMAccountName\"
+			  }
+			}";
+
+ 		$API="/api/v1/ldap_service";
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$postPayload);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($postPayload),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		$error=curl_errno($curl);
+		curl_close($curl);
+
+		// This function is doing a lot of background checks while running and can take some time to complete (sometimes 5 mins).
+		// The return code when successful is 201. Returning TRUE is successful.
+		
+		if($info==201) return TRUE;
+		else return FALSE;
+	}
 
 	// ==========================================================================
 	//                       Verification related functions
@@ -2884,19 +2945,19 @@
 
 	Sample output : 
 	
-/========== Object Name ==========|============= Snapshot ID =============|=== Size ===|======== Recovery Point =======|= Duration (hh:mm:ss) =|== Integrity ==\
-| Administrator                   | e4af21af-8d72-4a93-8cec-48afe8378a27  |  909.03 MB |  Tue Dec 01 11:02:56 UTC 2020 |        00:01:15       |     PASSED    |
-| All Files                       | c70b7639-a008-4e97-ad5f-35141cff073b  |  32.38 GB  |  Mon Nov 30 23:00:01 UTC 2020 |        00:08:18       |     PASSED    |
-| BE-INTRANODE2                   | fc177929-3345-4c1a-9521-a4b83c38fa17  |  21.47 GB  |  Tue Dec 01 14:12:43 UTC 2020 |        00:12:14       |     PASSED    |
-| Era                             | 33eb5672-908e-472b-8f5d-1d57f85f1fd3  |  53.69 GB  |  Mon Nov 30 23:02:07 UTC 2020 |        00:05:25       |     PASSED    |
-| Gustavo - CentOS                | 0c747086-7d34-41dd-b466-7e7ef55ed676  |  32.21 GB  |  Mon Nov 30 23:04:31 UTC 2020 |        00:03:21       |     PASSED    |
-| MSDS-IPAM                       | bceff719-b8eb-4959-9d7c-f35d837d214b  |  32.21 GB  |  Mon Nov 30 23:03:49 UTC 2020 |        00:08:18       |     PASSED    |
-| Win2019                         | 3bda0eb1-e667-41c7-af69-a710ff8221ac  |  48.25 GB  |  Mon Nov 30 23:00:03 UTC 2020 |        00:07:34       |     PASSED    |
-| be-ntnx-pc.it.pccwglobal.com    | 991b97aa-13fc-448d-adb5-b240b00d9ccc  |  689.46 GB |  Tue Dec 01 15:05:09 UTC 2020 |        00:55:27       |     PASSED    |
-| rsync-server                    | 2905d02e-216f-4c96-90d9-69f02d5c43aa  |  118.11 GB |  Mon Nov 30 23:00:02 UTC 2020 |        00:19:52       |     PASSED    |
-|==============================================================================================================================================================|
-|                                                                                                Total processing time |        02:01:44       |               |
-\==============================================================================================================================================================/	*/
+	/========== Object Name ==========|============= Snapshot ID =============|=== Size ===|======== Recovery Point =======|= Duration (hh:mm:ss) =|== Integrity ==\
+	| Administrator                   | e4af21af-8d72-4a93-8cec-48afe8378a27  |  909.03 MB |  Tue Dec 01 11:02:56 UTC 2020 |        00:01:15       |     PASSED    |
+	| All Files                       | c70b7639-a008-4e97-ad5f-35141cff073b  |  32.38 GB  |  Mon Nov 30 23:00:01 UTC 2020 |        00:08:18       |     PASSED    |
+	| BE-INTRANODE2                   | fc177929-3345-4c1a-9521-a4b83c38fa17  |  21.47 GB  |  Tue Dec 01 14:12:43 UTC 2020 |        00:12:14       |     PASSED    |
+	| Era                             | 33eb5672-908e-472b-8f5d-1d57f85f1fd3  |  53.69 GB  |  Mon Nov 30 23:02:07 UTC 2020 |        00:05:25       |     PASSED    |
+	| Gustavo - CentOS                | 0c747086-7d34-41dd-b466-7e7ef55ed676  |  32.21 GB  |  Mon Nov 30 23:04:31 UTC 2020 |        00:03:21       |     PASSED    |
+	| MSDS-IPAM                       | bceff719-b8eb-4959-9d7c-f35d837d214b  |  32.21 GB  |  Mon Nov 30 23:03:49 UTC 2020 |        00:08:18       |     PASSED    |
+	| Win2019                         | 3bda0eb1-e667-41c7-af69-a710ff8221ac  |  48.25 GB  |  Mon Nov 30 23:00:03 UTC 2020 |        00:07:34       |     PASSED    |
+	| be-ntnx-pc.it.pccwglobal.com    | 991b97aa-13fc-448d-adb5-b240b00d9ccc  |  689.46 GB |  Tue Dec 01 15:05:09 UTC 2020 |        00:55:27       |     PASSED    |
+	| rsync-server                    | 2905d02e-216f-4c96-90d9-69f02d5c43aa  |  118.11 GB |  Mon Nov 30 23:00:02 UTC 2020 |        00:19:52       |     PASSED    |
+	|==============================================================================================================================================================|
+	|                                                                                                Total processing time |        02:01:44       |               |
+	\==============================================================================================================================================================/	*/
 	
 	function printReport($data)
 	{
