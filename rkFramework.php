@@ -14,7 +14,6 @@
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
 						\/             \/                  \/ Php Framework
 	*/
-
 	// Function index in alphabetical order (total 90)
 	//------------------------------------------------
 
@@ -26,6 +25,7 @@
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
 	// printReport($data)
+	// rkAddLDAP($clusterConnect,$LDAP)
 	// rkCheckAccess($clusterConnect)
 	// rkColorOutput($string)
 	// rkColorRed($string)
@@ -98,7 +98,6 @@
 	// rkGetvmwareVMId($clusterConnect,$vmName)
 	// rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
 	// rkIntegrityResult($clusterConnect,$eventID)
-	// rkLDAPAdd($clusterConnect,$LDAP)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
