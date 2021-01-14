@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.51                      //
+	//                   Rubrik Php Framework version 1.52                      //
 	//                     (c) 2018-2021 - F. Lhoest                            //
 	//////////////////////////////////////////////////////////////////////////////
 	//                     Created on macOS with BBEdit                         //
@@ -12,9 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
-	// Function index in alphabetical order (total 90)
+
+	// Function index in alphabetical order (total 91)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -25,6 +26,7 @@
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
 	// printReport($data)
+	// rkAddAdminRoleLDAP($clusterConnect,$principalName)
 	// rkAddLDAP($clusterConnect,$LDAP)
 	// rkCheckAccess($clusterConnect)
 	// rkColorOutput($string)
@@ -107,7 +109,7 @@
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-												
+													
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -2759,31 +2761,56 @@
 
 		return($res);	
 	}
+
+	// ==========================================================================
+	//                       LDAP related functions
+	// ==========================================================================
 	
 	// ----------------------------------------------------------
 	// Function who's creating an LDAP auth source in the cluster
 	// ----------------------------------------------------------
 
-	/*
-		The $LDAP variable must have the following format : 
-
-		$LDAP=array(
-		"bindUserName" => "CN=My Service Account,OU=My OU,DC=my,DC=domain,DC=com",
-		"bindUserPassword" => "ServiceAccountPassword",
-		"authServer" => "DC_IP",
-		"name" => "My AD"
-		);
-	*/
-
-	function rkLDAPAdd($clusterConnect,$LDAP)
+	function rkAddLDAP($clusterConnect,$LDAP)
 	{
+		/*
+			The $LDAP variable must have the following format : 
+
+			$LDAP=array(
+			"bindUserName" => "CN=My Service Account,OU=My OU,DC=my,DC=domain,DC=com",
+			"bindUserPassword" => "ServiceAccountPassword",
+			"authServer" => "DC_IP1,DC_IP2",    <- moultiple DCs IPs/Names separated by ","
+			"name" => "My AD"
+			);
+		*/
+
+		// Construct authServer variable 
+		
+		$authServer=$LDAP["authServer"];
+		$servers='';
+
+		if(strpos($authServer,","))
+		{
+			$servTMP=explode(",",$authServer);
+			$numItems=count($servTMP);
+			$i=0;
+	
+			while ($i<$numItems-1)
+			{
+				$servers.="\"ldap://".$servTMP[$i].":636\", \n";
+				$i++;
+			}
+			$servers.="\"ldap://".$servTMP[$i].":636\"\n";
+		}
+		else $servers="\"ldap://".$authServer.":636\"\n";
+
 		// Prepare the payload with the correct syntax
 		$postPayload=
 			"{
 			  \"bindUserName\": \"".$LDAP["bindUserName"]."\",
 			  \"bindUserPassword\": \"".$LDAP["bindUserPassword"]."\",
-			  \"authServers\": [
-				\"ldap://".$LDAP["authServer"].":636\"
+			  \"authServers\": [";
+		$postPayload.=$servers;
+		$postPayload.="		
 			  ],
 			  \"name\": \"".$LDAP["name"]."\",
 			  \"advancedOptions\": {
@@ -2794,6 +2821,7 @@
 				\"userNameSearchAttribute\": \"sAMAccountName\"
 			  }
 			}";
+			// Parameters above are Rubrik's recommanded settings (groupSearchFilter, userSearchFilter)
 
  		$API="/api/v1/ldap_service";
 
@@ -2814,11 +2842,90 @@
 		curl_close($curl);
 
 		// This function is doing a lot of background checks while running and can take some time to complete (sometimes 5 mins).
-		// The return code when successful is 201. Returning TRUE is successful.
+		// The return code when successful is 201. Returning "TRUE" if successful.
 		
-		if($info==201) return TRUE;
-		else return FALSE;
+		if($info==201) return "TRUE";
+		else return $result;
 	}
+	
+	// ---------------------------------------------------------
+	// Function who's adding a LDAP user or group as local admin
+	// It returns 200 is everything went right.
+	// ---------------------------------------------------------
+
+	function rkAddAdminRoleLDAP($clusterConnect,$principalName)
+	{
+		// First, get principalName ID
+		$API="/api/v1/principal?limit=1&name=".urlencode($principalName);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		$principalId=$result->data[0]->id;
+
+		// Next Get the role ID
+
+		$API="/api/v1/role?limit=1&sort_by=Name&sort_order=asc&name=AdministratorRole";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		$roleID=$result->data[0]->roleId;
+		
+		// Lastly push the new rolID for principalID
+
+		$API="/api/v1/principal/role";
+
+		$config_params="
+			{
+			  \"principals\": [
+				\"".$principalId."\"
+			  ],
+			  \"roles\": [
+				\"".$roleID."\"
+			  ]
+			}		
+			";
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+   		
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		
+		return $info;
+	}	
 
 	// ==========================================================================
 	//                       Verification related functions
@@ -2898,7 +3005,6 @@
 
 		return $result;
 	}
-	
 	
 	// ==========================================================================
 	//                           Non-Rubrik related functions
