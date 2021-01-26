@@ -92,7 +92,7 @@ This file is a definition of your various Rubrik clusters, either virtual or phy
 ?>
 ```
 
-Is is composed of an array with the various parameters that allow accessing the clusters you need to display in the portal itself.
+It is composed of an array with the various parameters that allow accessing the clusters you need to display in the portal itself.
 
 - rkRubrikCentral.php
 
