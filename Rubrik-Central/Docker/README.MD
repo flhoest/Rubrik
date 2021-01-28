@@ -1,7 +1,7 @@
 ```
 Rubrik Central, Docker Edition
 ```
-See support blog post here : 
+See support blog post here : https://www.lets-talk-about.tech/2021/01/docker-rubrik-central-docker-edition.html
 
 ## Instructions
 
