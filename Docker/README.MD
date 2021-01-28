@@ -2,7 +2,7 @@
 Docker Edition
 ```
 
-#Instructions
+## Instructions
 
 - Download the tgz file in a custom folder
 - run ./install.sh
