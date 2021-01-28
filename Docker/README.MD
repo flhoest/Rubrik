@@ -14,7 +14,7 @@ Still in a beta version, some customizations needed to match the CSS, but it is 
 
 ```
 ./stop.sh : stop the container
-./start.sh : start tprevisoulsy stopped container
+./start.sh : start previsoulsy stopped container
 ./status.sh : display container status
 ```
 
