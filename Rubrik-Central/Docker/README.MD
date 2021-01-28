@@ -1,6 +1,7 @@
 ```
-Docker Edition
+Rubrik Central, Docker Edition
 ```
+See support blog post here : 
 
 ## Instructions
 
@@ -16,4 +17,5 @@ Still in a beta version, some customizations needed to match the CSS, but it is 
 ./stop.sh : stop the container
 ./start.sh : start previsoulsy stopped container
 ./status.sh : display container status
+./cleanup.sh : remove everything, ready to start again from scratch
 ```
