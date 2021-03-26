@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/ Php Framework
+						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 91)
+	// Function index in alphabetical order (total 92)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -48,6 +48,7 @@
 	// rkGetClusterDetails($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
 	// rkGetDataReport($clusterConnect,$rptID)
+	// rkGetESXVMConfig($clusterConnect,$vmName)
 	// rkGetEpoch($dateString)
 	// rkGetEpoch2($dateString)
 	// rkGetFailedAmount($clusterConnect,$objectName)
@@ -109,7 +110,7 @@
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-													
+														
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -430,6 +431,81 @@
 		curl_close($curl);
 		
 		return json_decode($result)->snapshots;
+	}
+
+	// -----------------------------------------------------------
+	// Function getting ESXi VM specifications
+	// -----------------------------------------------------------
+
+	function rkGetESXVMConfig($clusterConnect,$vmName)
+	{
+		$vmConfig=array();
+
+		// Get the vmname -> vmid conversion
+		// Get the list of snapshots
+
+		$vmId=rkGetvmwareVMId($clusterConnect,$vmName);
+		$snaps=rkGetvmwareVMSnaps($clusterConnect,$vmId);
+
+		if(!$snaps)
+		{
+			print(rkColorRed("No spanshots found!\nExiting.\n\n"));
+			exit();
+		}
+
+		// take latest snapID 
+		$snapID=$snaps[0]->id;
+		$vmConfig["snapID"]=$snapID;
+		
+		$API="/api/v1/vmware/vm/snapshot/".urlencode($snapID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		$config=json_decode($result)->config;
+		$tmp=explode(",",$config);
+		
+		for($i=0;$i<count($tmp);$i++)
+		{
+			// Search VM name
+			if(strpos($tmp[$i],"name\":"))
+			{
+				$tmp2=explode(":",$tmp[$i]);
+				$vmConfig["name"]=$tmp2[1];
+			}
+
+			// Search for CPU count
+			if(strpos($tmp[$i],"numCPUs"))
+			{
+				$tmp2=explode(":",$tmp[$i]);
+				$vmConfig["cpu"]=$tmp2[1];
+			}
+			
+			// Search for RAM amount
+			if(strpos($tmp[$i],"memoryMB"))
+			{
+				$tmp2=explode(":",$tmp[$i]);
+				$vmConfig["memory"]=$tmp2[1]/1024;
+			}
+
+			// Search for disks
+			if(strpos($tmp[$i],"capacityInBytes"))
+			{
+				$tmp2=explode(":",$tmp[$i]);
+				$vmConfig["disk"]=$tmp2[1];
+			}
+
+		}
+		return $vmConfig;
 	}
 
 
