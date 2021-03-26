@@ -1,11 +1,11 @@
 <?php
 		
-	/*				__________        ___.            .__  __    
-					\______   \ __ __ \_ |__  _______ |__||  | __
-					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
-					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
-					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-				    		\/             \/                  \/ Php Framework
+	/*	__________        ___.            .__  __    
+		\______   \ __ __ \_ |__  _______ |__||  | __
+		 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
+		 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
+		 |____|_  /|____/  |___  / |__|   |__||__|_ \
+	   		\/             \/                  \/ Php Framework
 	*/
 
 	// Include section
@@ -19,9 +19,9 @@
 				
 				);
 
-  // Entry Point
+  	// Entry Point
 
-  $VMname="vmName";
+  	$VMname="vmName";
 	$vmSpecs=rkGetESXVMConfig($clusterConnect,$VMname);
 
 	print("\nMachine ".rkColorOutput($VMname)." in snapshot ".rkColorOutput($vmSpecs["snapID"])." has the following specs :\n");
