@@ -1,10 +1,10 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                   Rubrik Php Framework version 1.52                      //
-	//                     (c) 2018-2021 - F. Lhoest                            //
+	//                     Rubrik Php Framework version 1.6                     //
+	//                        (c) 2018-2021 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Created on macOS with BBEdit                         //
+	//                       Created on macOS with BBEdit                       //
 	//////////////////////////////////////////////////////////////////////////////
 		
 	/*				__________        ___.            .__  __    
@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 92)
+	// Function index in alphabetical order (total 95)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -25,10 +25,12 @@
 	// getRubrikNodeCount($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
+	// inColor($colorName,$string)
 	// printReport($data)
 	// rkAddAdminRoleLDAP($clusterConnect,$principalName)
 	// rkAddLDAP($clusterConnect,$LDAP)
 	// rkCheckAccess($clusterConnect)
+	// rkColorBold($string)
 	// rkColorOutput($string)
 	// rkColorRed($string)
 	// rkCreateReport($clusterConnect,$rptName,$rptSpecs)
@@ -51,6 +53,7 @@
 	// rkGetESXVMConfig($clusterConnect,$vmName)
 	// rkGetEpoch($dateString)
 	// rkGetEpoch2($dateString)
+	// rkGetExecSum($clusterConnect)
 	// rkGetFailedAmount($clusterConnect,$objectName)
 	// rkGetFileSet($clusterConnect)
 	// rkGetFileSetSnapSize($clusterConnect,$snapshotID,$absolutePath)
@@ -110,7 +113,7 @@
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-														
+															
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -2648,6 +2651,10 @@
  	{
 		$API="/api/internal/report";
 		
+// 		var_dump($rptName);
+// 		var_dump($rptSpecs);
+// 		exit();
+		
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_POST, 1);
 		curl_setopt($curl, CURLOPT_POSTFIELDS,$rptSpecs);
@@ -2837,6 +2844,184 @@
 
 		return($res);	
 	}
+	
+	// --------------------------------------------------------------
+	// Function returning key cluster statistics into an array
+	// --------------------------------------------------------------
+
+	function rkGetExecSum($clusterConnect)
+	{
+		// $clusterConnect must be provided as an array of credentials
+
+		//	Sample format : 
+	
+		// 		$clusterConnect=array(
+		// 				0 => array(
+		// 					"cluster" => "Cluster 1",
+		// 					"username" => "username",
+		// 					"password" => "70617373776f7264",
+		// 					"ip" => "192.168.1.1"
+		// 				),
+		// 				1 => array(
+		// 					"cluster" => "Cluster 2",
+		// 					"username" => "username",
+		// 					"password" => "70617373776f7264",
+		// 					"ip" => "192.168.1.2"
+		// 				));
+	
+		$rptName="tmpReportScriptGenerated_WillBeRemoved";
+		$rptSpecs="
+			{
+			  \"reportType\": \"Custom\",
+			  \"chart1\": {
+				\"id\": \"chart1\",
+				\"name\": \"Local Storage By Object Type\",
+				\"chartType\": \"VerticalBar\",
+				\"attribute\": \"ObjectType\",
+				\"measure\": \"LocalStorage\"
+			  },
+			  \"chart0\": {
+				\"id\": \"chart0\",
+				\"name\": \"dummyChart\",
+				\"chartType\": \"VerticalBar\",
+				\"attribute\": \"ObjectType\",
+				\"measure\": \"TotalSnapshots\"
+			  },
+			  \"updateStatus\": \"Ready\",
+			  \"name\": \"".$rptName."\",
+			  \"filters\": {
+				\"clusterLocation\": [
+				  \"Local\"
+				]
+			  },
+			  \"reportTemplate\": \"ObjectProtectionSummary\",
+			  \"table\": {
+				\"columns\": [
+				  \"ObjectName\",
+				  \"ObjectType\",
+				  \"SlaDomain\",
+				  \"ArchivalTarget\",
+				  \"TotalSnapshots\",
+				  \"LocalSnapshots\",
+				  \"ReplicaSnapshots\",
+				  \"ArchiveSnapshots\",
+				  \"LocalStorage\",
+				  \"ArchiveStorage\",
+				  \"ReplicaStorage\",
+				  \"LocalStorageGrowth\",
+				  \"ReplicaStorageGrowth\",
+				  \"ArchiveStorageGrowth\"
+				]
+			  }
+			}
+			";
+	
+		// Get cluster details
+		$totalStorage=json_decode(getRubrikTotalStorage($clusterConnect))->bytes;
+		$nodes=getRubrikNodeCount($clusterConnect);
+		$nodeCount=count($nodes->data);
+		$availStorage=getRubrikAvailableStorage($clusterConnect);
+		$details=json_decode(rkGetClusterDetails($clusterConnect));
+		
+		print(inColor("Gre","(i) DEBUG")." -- Gettings initial cluster details for ".rkColorOutput($details->name));
+
+		$snapNum=rkGetSnapshotCount($clusterConnect);
+		$allSnaps=rkGetAllSnapshotInfo($clusterConnect);
+		$ingested=$allSnaps["Ingested"];
+		$stored=$allSnaps["Physical"];
+		$efficiency=100-($stored/$ingested*100);
+		$name=$details->name;
+		$location=$details->geolocation->address;
+		$version=$details->version;
+
+		// Get details for each nodes
+		$nodeDetails=array();
+		for($i=0;$i<$nodeCount;$i++)
+		{
+			$nodeDetails[$i]["ip"]=$nodes->data[$i]->ipAddress;
+			$nodeDetails[$i]["id"]=$nodes->data[$i]->id;
+			$nodeDetails[$i]["status"]=$nodes->data[$i]->status;
+		}
+
+		// Populate all results into return variable
+		$data["name"]=$name;
+		$data["location"]=$location;
+		$data["version"]=$version;
+		$data["nodeCount"]=$nodeCount;
+		$data["nodeDetails"]=$nodeDetails;
+		$data["totalStorage"]=$totalStorage;
+		$data["availableStorage"]=$availStorage;
+		$data["snaps"]=$snapNum;
+		$data["dataIngested"]=$ingested;
+		$data["dataStored"]=$stored;
+		$data["storageEfficiency"]=$efficiency;
+		
+		// Get all storage usage per SLA
+		$SLAs=rkGetSLAs($clusterConnect);
+		$SLASize=array();
+
+		for($j=0;$j<count($SLAs);$j++)
+		{
+			$SLASize[$j]["name"]=$SLAs[$j]["name"];
+			$SLASize[$j]["size"]=rkGetSLAStorage($clusterConnect,$SLAs[$j]["id"]);
+		}
+
+		$data["sla_storage"]=$SLASize;		
+
+		// Snapshot breakdown using a tmp report 
+		// Step 1 - Create Report, if it already exists, refresh it
+
+		$rptID=rkGetReportID($clusterConnect,$rptName);
+		// If report does not exists, create one
+		if(!$rptID)
+		{
+			print("\n".inColor("Yel","/!\ DEBUG")." -- Report does not exist, creating...\n");
+
+			$res=rkCreateReport($clusterConnect,$rptName,$rptSpecs);
+			
+			print(inColor("Gre","(i) DEBUG")." -- Report Created : ".$res."\n");
+		}
+		else
+		{
+			// If report exist -> delete it to create it and create it again 
+			$res=rkDeleteReport($clusterConnect,$rptID);
+			print("\n".inColor("Yel","/!\ DEBUG")." -- Report Deleted : ".rkColorOutput($res)."\n");
+			$res=rkCreateReport($clusterConnect,$rptName,$rptSpecs);
+			print(inColor("Gre","(i) DEBUG")." -- Report Created : ".$res."\n");
+		}
+	
+		// Check if report data have been generated : "updateStatus": "Ready"
+
+		print(inColor("Gre","(i) DEBUG")." -- Generating object details : ");
+
+		$exit="no";
+		while ($exit!="yes")
+		{
+			$status=rkGetReportStatus($clusterConnect,$rptName);
+			if($status["status"]=="Ready") $exit="yes";
+
+			print(".");
+			sleep(15);
+		}
+
+		$dateTime=str_replace("T", " ", $status["dataTime"]);
+		print("\n".inColor("Gre","(i) DEBUG")." -- Data generated!, displaying results...\n");
+		print(inColor("Gre","(i) DEBUG")." -- Data have been generated on ".rkColorOutput($dateTime)."\n");
+
+		// Step 2 - Get Report results
+
+		$rptID=rkGetReportID($clusterConnect,$rptName);
+		$data2=rkGetDataReport($clusterConnect,$rptID);
+
+		// Step 3 - Delete report to cleanup cluster
+
+		print(inColor("Gre","(i) DEBUG")." -- Deleting temporary report from cluster...\n\n");
+		$res=rkDeleteReport($clusterConnect,$rptID);
+		
+		$data["storageBreakdown"]=$data2;
+
+		return $data;
+	}	
 
 	// ==========================================================================
 	//                       LDAP related functions
@@ -3195,7 +3380,220 @@
 	{
 		return ("\e[1;31m".$string."\033[0m");
 	}
+	
+	// ---------------------------------------------------------------------------
+	// Display a string in bold white
+	// ---------------------------------------------------------------------------
+
+	function rkColorBold($string)
+	{
+			return ("\e[1;37m".$string."\033[0m");
+	}
 		
+	// ---------------------------------------------------------------------------
+	// Function which display a string in a given color
+	// ---------------------------------------------------------------------------
+
+	function inColor($colorName,$string)
+	{
+		$colors=array( 	0 =>
+					array( "codeName" => "Bla",
+							"codeValue" => "\e[0;30m"),
+						1 =>
+					array( "codeName" => "Red",
+							"codeValue" => "\e[0;31m"),						
+						2 =>
+					array( "codeName" => "Gre",
+							"codeValue" => "\e[0;32m"),						
+						3 =>
+					array( "codeName" => "Yel",
+							"codeValue" => "\e[0;33m"),						
+						4 =>
+					array( "codeName" => "Blu",
+							"codeValue" => "\e[0;34m"),						
+						5 =>
+					array( "codeName" => "Pur",
+							"codeValue" => "\e[0;35m"),						
+						6 =>
+					array( "codeName" => "Cya",
+							"codeValue" => "\e[0;36m"),						
+						7 =>
+					array( "codeName" => "Whi",
+							"codeValue" => "\e[0;37m"),						
+
+						8 =>
+					array( "codeName" => "BBlack",
+							"codeValue" => "\e[1;30m"),						
+						9 =>
+					array( "codeName" => "BRed",
+							"codeValue" => "\e[1;31m"),						
+						10 =>
+					array( "codeName" => "BGre",
+							"codeValue" => "\e[1;32m"),						
+						11 =>
+					array( "codeName" => "BYel",
+							"codeValue" => "\e[1;33m"),						
+						12 =>
+					array( "codeName" => "BBlu",
+							"codeValue" => "\e[1;34m"),						
+						13 =>
+					array( "codeName" => "BPur",
+							"codeValue" => "\e[1;35m"),						
+						14 =>
+					array( "codeName" => "BCya",
+							"codeValue" => "\e[1;36m"),						
+						15 =>
+					array( "codeName" => "BWhi",
+							"codeValue" => "\e[1;37m"),						
+
+
+						16 =>
+					array( "codeName" => "UBlack",
+							"codeValue" => "\e[4;30m"),						
+						17 =>
+					array( "codeName" => "URed",
+							"codeValue" => "\e[4;31m"),						
+						18 =>
+					array( "codeName" => "UGre",
+							"codeValue" => "\e[4;32m"),						
+						19 =>
+					array( "codeName" => "UYel",
+							"codeValue" => "\e[4;33m"),						
+						20 =>
+					array( "codeName" => "UBlu",
+							"codeValue" => "\e[4;34m"),						
+						21 =>
+					array( "codeName" => "UPur",
+							"codeValue" => "\e[4;35m"),						
+						22 =>
+					array( "codeName" => "UCya",
+							"codeValue" => "\e[4;36m"),						
+						23 =>
+					array( "codeName" => "UWhi",
+							"codeValue" => "\e[4;37m"),						
+
+						24 =>
+					array( "codeName" => "IBlack",
+							"codeValue" => "\e[0;90m"),						
+						25 =>
+					array( "codeName" => "IRed",
+							"codeValue" => "\e[0;91m"),						
+						26 =>
+					array( "codeName" => "IGre",
+							"codeValue" => "\e[0;92m"),						
+						27 =>
+					array( "codeName" => "IYel",
+							"codeValue" => "\e[0;93m"),						
+						28 =>
+					array( "codeName" => "IBlu",
+							"codeValue" => "\e[0;94m"),						
+						29 =>
+					array( "codeName" => "IPur",
+							"codeValue" => "\e[0;95m"),						
+						30 =>
+					array( "codeName" => "ICya",
+							"codeValue" => "\e[0;96m"),						
+						31 =>
+					array( "codeName" => "IWhi",
+							"codeValue" => "\e[0;97m"),						
+
+
+						32 =>
+					array( "codeName" => "BIBlack",
+							"codeValue" => "\e[1;90m"),						
+						33 =>
+					array( "codeName" => "BIRed",
+							"codeValue" => "\e[1;91m"),						
+						34 =>
+					array( "codeName" => "BIGre",
+							"codeValue" => "\e[1;92m"),						
+						35 =>
+					array( "codeName" => "BIYel",
+							"codeValue" => "\e[1;93m"),						
+						36 =>
+					array( "codeName" => "BIBlu",
+							"codeValue" => "\e[1;94m"),						
+						37 =>
+					array( "codeName" => "BIPur",
+							"codeValue" => "\e[1;95m"),						
+						38 =>
+					array( "codeName" => "BICya",
+							"codeValue" => "\e[1;96m"),						
+						39 =>
+					array( "codeName" => "BIWhi",
+							"codeValue" => "\e[1;97m"),						
+
+						40 =>
+					array( "codeName" => "On_Black",
+							"codeValue" => "\e[40m"),						
+						41 =>
+					array( "codeName" => "On_Red",
+							"codeValue" => "\e[41m"),						
+						42 =>
+					array( "codeName" => "On_Gre",
+							"codeValue" => "\e[42m"),						
+						43 =>
+					array( "codeName" => "On_Yel",
+							"codeValue" => "\e[43m"),						
+						44 =>
+					array( "codeName" => "On_Blu",
+							"codeValue" => "\e[44m"),						
+						45 =>
+					array( "codeName" => "On_Pur",
+							"codeValue" => "\e[45m"),						
+						46 =>
+					array( "codeName" => "On_Cya",
+							"codeValue" => "\e[46m"),						
+						47 =>
+					array( "codeName" => "On_Whi",
+							"codeValue" => "\e[47m"),						
+
+						48 =>
+					array( "codeName" => "On_IBlack",
+							"codeValue" => "\e[0;100m"),						
+						49 =>
+					array( "codeName" => "On_IRed",
+							"codeValue" => "\e[0;101m"),						
+						50 =>
+					array( "codeName" => "On_IGre",
+							"codeValue" => "\e[0;102m"),						
+						51 =>
+					array( "codeName" => "On_IYel",
+							"codeValue" => "\e[0;103m"),						
+						52 =>
+					array( "codeName" => "On_IBlu",
+							"codeValue" => "\e[0;104m"),						
+						53 =>
+					array( "codeName" => "On_IPur",
+							"codeValue" => "\e[0;105m"),						
+						54 =>
+					array( "codeName" => "On_ICya",
+							"codeValue" => "\e[0;106m"),						
+						55 =>
+					array( "codeName" => "On_IWhi",
+							"codeValue" => "\e[0;107m"),						
+	
+				);
+
+		// Step 1 : search for color
+		$found=0;
+		$c=0;
+		
+		while ($found==0 && $c<count($colors))
+		{
+			if($colorName==$colors[$c]["codeName"])
+			{
+				$found=1;
+				$code=$colors[$c]["codeValue"];	
+			} 
+			$c++;	
+		}
+
+		if($found) return ($code.$string."\033[0m");
+		else return ($string);
+
+	}
+
 	// ---------------------------------------------------------------------------
 	// Display size (bytes) in human redable format
 	// ---------------------------------------------------------------------------
