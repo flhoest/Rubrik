@@ -12,7 +12,7 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
 
 	// Function index in alphabetical order (total 95)
@@ -2966,8 +2966,9 @@
 			$SLASize[$j]["size"]=rkGetSLAStorage($clusterConnect,$SLAs[$j]["id"]);
 		}
 
-		$data["sla_storage"]=$SLASize;		
-
+		$data["sla_storage"]=$SLASize;	
+		$data["runway"]=rkGetRunway($clusterConnect);
+		
 		// Snapshot breakdown using a tmp report 
 		// Step 1 - Create Report, if it already exists, refresh it
 
