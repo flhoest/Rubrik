@@ -131,6 +131,8 @@
 	print("| All snapshots : ".rkColorOutput($grandTotal["snaps"])."\n");
 	print("| Total data ingested : ".rkColorOutput(rkFormatBytes($grandTotal["dataIngested"]))."\n");
 	print("| Total data stored : ".rkColorOutput(rkFormatBytes($grandTotal["dataStored"]))."\n");
+	print(inColor("BGre","{".$data["name"]."} ")."| Runway : ".rkColorOutput($data["runway"])." day(s)\n");
+
 	
 	// Compute overall storage savings ratio
 	
