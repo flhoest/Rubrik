@@ -2,7 +2,7 @@
 
 	include_once "rkFramework.php";
 	
-  $clusterConnect=array(
+  	$clusterConnect=array(
 		0 => array(
 			"cluster" => "cluster1",
 			"username" => "username",
