@@ -3,7 +3,7 @@
 	// Include section
 	include_once "rkFramework.php";
 	
-	// Rubrik Appliance
+	// Rubrik Appliance Credentials
 
 	$clusterConnect=array(
 		"username" => "username",
@@ -25,5 +25,4 @@
 		print("\n");
 	}
 	print("\n");
-
 ?>
