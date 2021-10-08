@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Rubrik Php Framework version 1.6                     //
+	//                     Rubrik Php Framework version 1.7                     //
 	//                        (c) 2018-2021 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
 	//                       Created on macOS with BBEdit                       //
@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/ Php Framework
+						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 95)
+	// Function index in alphabetical order (total 96)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -93,6 +93,7 @@
 	// rkGetTimeStamp($dateString)
 	// rkGetUnmanaged($clusterConnect)
 	// rkGetUnmanagedSnapshots($clusterConnect,$ID)
+	// rkGetUpgradeHistory($clusterConnect)
 	// rkGetUserDetails($clusterConnect,$userID)
 	// rkGetUserID($clusterConnect,$userName)
 	// rkGetUserName($clusterConnect,$userID)
@@ -113,7 +114,7 @@
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-															
+																
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -1094,6 +1095,50 @@
 		curl_close($curl);
 
 		return json_decode($result)->days;
+	}
+	
+	// -------------------------------------------------
+	// Get cluster upgrade history date time and version
+	// -------------------------------------------------
+
+	function rkGetUpgradeHistory($clusterConnect)
+	{
+		$API="/api/v1/config/history/list_updates?namespace=local_atlas&source=Upgrade";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result=curl_exec($curl);
+		$result=json_decode($result);
+		curl_close($curl);
+
+		$history=$result;
+
+		$upgradesHistory=array();
+		for($i=0;$i<count($history->data);$i++)
+		{
+			// cleanup date/time format
+			$dateTime=$history->data[$i]->modifiedDateTime;
+			// Remove last 7 characters -> 2021-06-30T10:08:12.269Z and add 00 sec
+			$dateTime=substr($dateTime, 0, -7);
+			$dateTime=$dateTime."00";
+			$dateTime=rkGetHumanTime($dateTime);
+	
+			// cleanup version number
+			$version=$history->data[$i]->configChangeMetadata;
+			$version=substr($version,strpos($version,"tarball_version")+18,strlen($version));
+			$version=str_replace(array("\"","}"),"",$version);
+	
+			$upgradesHistory[$i]=$dateTime."|".$version;
+		}
+
+		return(array_values(array_unique($upgradesHistory)));	
 	}
 	
 	// ==========================================================================
