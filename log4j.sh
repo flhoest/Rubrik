@@ -8,7 +8,7 @@
 #						\/             \/                  \/ 
 
 # Get evidence of log4j presence in any VMs snapshots (from either vmware or Nutanix AHV)
-# Thanks a lot to Nick Boyadjiev who created the logic
+# Thanks a lot to @nboyadj who created the logic
 # I only put all into music ! 
 
 # Define variables
