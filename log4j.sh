@@ -20,6 +20,8 @@ password=secret
 # Create working directory
 mkdir out 2> /dev/null
 rm -f out/*
+rm vmware.csv
+rm nutanix.csv
 
 # Get vm ID for vmware
 echo
