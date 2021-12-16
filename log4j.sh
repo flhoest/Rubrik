@@ -35,7 +35,7 @@ curl -k -X GET "https://$clusterIP/api/internal/nutanix/vm" -H "accept: applicat
 
 # Rewrite vm name : vm id 
 cat vmware.json | jq '.data[] | .name + "," + .id' | sed s'|"||g' > vmware.csv
-cat nutanix.json | jq '.data[] | .name + "," + .id' | sed s'|"||g' >> nutanix.csv
+cat nutanix.json | jq '.data[] | .name + "," + .id' | sed s'|"||g' > nutanix.csv
 
 # Loop thru vm/vmID and search for log4j for vmware
 while read line; 
