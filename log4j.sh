@@ -5,7 +5,7 @@
 #					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 #					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 #					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-#							\/             \/                  \/ 
+#						\/             \/                  \/ 
 
 # Get evidence of log4j presence in any VMs snapshots (from either vmware or Nutanix AHV)
 # Thanks a lot to Nick Boyadjiev who created the logic
