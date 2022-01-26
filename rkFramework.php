@@ -1,8 +1,8 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Rubrik Php Framework version 1.7                     //
-	//                        (c) 2018-2021 - F. Lhoest                         //
+	//                     Rubrik Php Framework version 1.8                     //
+	//                        (c) 2018-2022 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
 	//                       Created on macOS with BBEdit                       //
 	//////////////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 96)
+	// Function index in alphabetical order (total 98)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -104,17 +104,19 @@
 	// rkGetvmwareVM($clusterConnect)
 	// rkGetvmwareVMId($clusterConnect,$vmName)
 	// rkGetvmwareVMSnaps($clusterConnect,$vmwareVMID)
+	// rkGraphQL($clusterConnect,$query)
 	// rkIntegrityResult($clusterConnect,$eventID)
 	// rkMSSQLRestore($clusterConnect,$dbSourceID,$dbTargetInstanceID,$dbTargetName,$timeStamp,$overwrite=false,$targetPaths="")
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
 	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 	// rkObjectNametoID($clusterConnect,$name)
+	// rkPolGraphQL($clusterConnect,$query)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-																
+																	
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -3312,6 +3314,68 @@
 
 		return $result;
 	}
+	
+	// ==========================================================================
+	//         Sending GraphQL queries
+	// ==========================================================================
+
+	// -----------------------------------------------
+	// Function sending GraphQL queries to on-prem CDM
+	// -----------------------------------------------
+
+	function rkGraphQL($clusterConnect,$query)
+	{
+		$API="/api/internal/graphql";
+
+		$config_params=$query;
+				
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return(json_decode($result));
+	}
+		
+	// -------------------------------------------
+	// Function sending GraphQL queries to Polaris
+	// -------------------------------------------
+
+	function rkPolGraphQL($clusterConnect,$query)
+	{
+		$API="/api/graphql";
+		
+		// Query must be encapsulated into a valid JSON string. {"query": "$query"}
+		$config_params="{\"query\":\"".$query."\"}";
+				
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$clusterConnect["token"],'Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($curl);
+		
+		curl_close($curl);
+
+		return(json_decode($result));
+	}	
+	
+
+
+	
 	
 	// ==========================================================================
 	//                           Non-Rubrik related functions
