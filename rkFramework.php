@@ -12,7 +12,7 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
 
 	// Function index in alphabetical order (total 98)
@@ -922,7 +922,6 @@
 	
 	function getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
 	{
-	
 		$API="/api/internal/event?limit=".$numEvents."&event_type=".$eventType;
 
 		if($objectType!="") $API=$API."&object_type=".$objectType;
@@ -3327,7 +3326,8 @@
 	{
 		$API="/api/internal/graphql";
 
-		$config_params=$query;
+		// Query must be encapsulated into a valid JSON string. {"query": "$query"}
+		$config_params="{\"query\":\"".$query."\"}";
 				
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_POST, 1);
@@ -3335,7 +3335,7 @@
 		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
 		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
@@ -3372,11 +3372,7 @@
 
 		return(json_decode($result));
 	}	
-	
-
-
-	
-	
+		
 	// ==========================================================================
 	//                           Non-Rubrik related functions
 	// ==========================================================================
