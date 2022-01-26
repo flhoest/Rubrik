@@ -12,7 +12,7 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-							\/             \/                  \/ Php Framework
+						\/             \/                  \/ Php Framework
 	*/
 
 	// Function index in alphabetical order (total 98)
