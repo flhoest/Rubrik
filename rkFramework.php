@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Rubrik Php Framework version 1.8                     //
+	//                     Rubrik Php Framework version 1.81                    //
 	//                        (c) 2018-2022 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
 	//                       Created on macOS with BBEdit                       //
@@ -15,7 +15,7 @@
 						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 98)
+	// Function index in alphabetical order (total 99)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -111,12 +111,13 @@
 	// rkMakeAdminUser($clusterConnect,$userID)
 	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
 	// rkObjectNametoID($clusterConnect,$name)
-	// rkPolGraphQL($clusterConnect,$query)
+	// rkPolGetToken($clientID,$clientSecret,$tenant)
+	// rkPolGraphQL($polarisConnect,$query)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-																	
+																		
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -3318,6 +3319,33 @@
 	//         Sending GraphQL queries
 	// ==========================================================================
 
+	// ---------------------------------------
+	// Function retieving Polaris secret token
+	// ---------------------------------------
+
+	function rkPolGetToken($clientID,$clientSecret,$tenant)
+	{
+		$API="/api/client_token";
+		
+		// Query must be encapsulated into a valid JSON string. {"query": "$query"}
+		$config_params="{\"client_id\":\"".$clientID."\",\"client_secret\":\"".$clientSecret."\",\"grant_type\":\"client_credentials\"}";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$tenant.".my.rubrik.com".$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($curl);
+		
+		curl_close($curl);
+
+		return(json_decode($result)->access_token);
+	}
+
 	// -----------------------------------------------
 	// Function sending GraphQL queries to on-prem CDM
 	// -----------------------------------------------
@@ -3350,7 +3378,7 @@
 	// Function sending GraphQL queries to Polaris
 	// -------------------------------------------
 
-	function rkPolGraphQL($clusterConnect,$query)
+	function rkPolGraphQL($polarisConnect,$query)
 	{
 		$API="/api/graphql";
 		
@@ -3361,10 +3389,10 @@
 		curl_setopt($curl, CURLOPT_POST, true);
 		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$clusterConnect["token"],'Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$polarisConnect["token"],'Content-Type: application/json'));
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_URL, "https://".$polarisConnect["tenant"].".my.rubrik.com".$API);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 		$result = curl_exec($curl);
 		
