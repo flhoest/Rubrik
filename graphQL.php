@@ -9,10 +9,15 @@
 		"ip" => "cdm_ip"
 		);
 		
+
+	$clientID="client|xxxxxxxxx";
+	$clientSecret="xxxxxxxxxxxxxxxxxxxxxx";
+	$tenant="my_tenant";
+	
 	// Polaris credenditals		
 	$polarisConnect=array(
-		"token" => "my_very_long_token",
-		"ip" => "my_tenant.my.rubrik.com"
+		"token" => rkpolGetToken($clientID,$clientSecret,$tenant),
+		"tenant" => $tenant
 		);
 
 	$cdmQuery="{\"query\":\"query Cluster{cluster(id:\\\"me\\\"){version id brikCount isSingle isBootstrapped}}\"}";
