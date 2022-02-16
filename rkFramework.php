@@ -1,7 +1,7 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Rubrik Php Framework version 1.81                    //
+	//                     Rubrik Php Framework version 1.0                     //
 	//                        (c) 2018-2022 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
 	//                       Created on macOS with BBEdit                       //
@@ -15,13 +15,13 @@
 						\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 99)
+	// Function index in alphabetical order (total 108)
 	//------------------------------------------------
 
 	// day2text($days)
 	// getRubrikAvailableStorage($clusterConnect)
 	// getRubrikClusterID($clusterConnect)
-	// getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	// getRubrikEvents($clusterConnect,$numEvents,$eventType,$objectType,$objectName)
 	// getRubrikNodeCount($clusterConnect)
 	// getRubrikSLAs($clusterConnect)
 	// getRubrikTotalStorage($clusterConnect)
@@ -29,6 +29,7 @@
 	// printReport($data)
 	// rkAddAdminRoleLDAP($clusterConnect,$principalName)
 	// rkAddLDAP($clusterConnect,$LDAP)
+	// rkAddNutanix($clusterConnect,$nutanixCluster)
 	// rkCheckAccess($clusterConnect)
 	// rkColorBold($string)
 	// rkColorOutput($string)
@@ -37,6 +38,7 @@
 	// rkCreateReportSchedule($clusterConnect,$rptID,$scheduleDefinition)
 	// rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
 	// rkCreateUser($clusterConnect,$userName,$Password)
+	// rkDelNutanix($clusterConnect,$clusterID)
 	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
 	// rkDeleteUnmanaged($clusterConnect,$ObjID)
 	// rkDeleteUser($clusterConnect,$userID)
@@ -46,6 +48,7 @@
 	// rkFormatBytes($bytes,$decimals=2,$system='metric')
 	// rkGetAgentConnectivity($clusterConnect,$hostName)
 	// rkGetAllSnapshotInfo($clusterConnect)
+	// rkGetAllVMs($clusterConnect)
 	// rkGetBlackout($clusterConnect)
 	// rkGetClusterDetails($clusterConnect)
 	// rkGetClusterVersion($clusterConnect)
@@ -72,6 +75,8 @@
 	// rkGetMSSQLSnapshotSize($clusterConnect,$dbID,$DateTime)
 	// rkGetMSSQLdbID($clusterConnect,$sqlInstanceID,$sqlDBName)
 	// rkGetMSSQLid($clusterConnect,$dbName,$dbHost)
+	// rkGetNutanixCluster($clusterConnect,$clusterID)
+	// rkGetNutanixClusters($clusterConnect)
 	// rkGetNutanixVM($clusterConnect)
 	// rkGetNutanixVMSnaps($clusterConnect,$NutanixVMID)
 	// rkGetNutanixVMiD($clusterConnect,$NutanixVMName)
@@ -110,14 +115,18 @@
 	// rkMSSQLgetFiles($clusterConnect,$dbSourceID,$dbRecoveryTime)
 	// rkMakeAdminUser($clusterConnect,$userID)
 	// rkModifyUser($clusterConnect,$userID,$firstName,$lastName,$eMail)
+	// rkNutanixAddStatus($clusterConnect,$taskID)
+	// rkNutanixDelStatus($clusterConnect,$taskID)
 	// rkObjectNametoID($clusterConnect,$name)
 	// rkPolGetToken($clientID,$clientSecret,$tenant)
 	// rkPolGraphQL($polarisConnect,$query)
 	// rkRefreshHost($clusterConnect,$hostName)
 	// rkRefreshReport($clusterConnect,$rptID)
+	// rkRemoveSLA($clusterConnect,$vmID)
 	// rkSetBanner($clusterConnect,$bannerText)
+	// rkSetSLA($clusterConnect,$vmID,$slaID)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-																		
+																			
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
@@ -296,6 +305,218 @@
 		$result = json_decode(curl_exec($curl));
 		curl_close($curl);	
 
+		return($result);
+	}
+
+	// ---------------------------------------------------------------
+	// Function to add new Nutanix cluster to the Rubrik configuration
+	// ---------------------------------------------------------------
+
+	function rkAddNutanix($clusterConnect,$nutanixCluster)
+	{
+		$API="/api/internal/nutanix/cluster";
+
+		// Transform Certificate string to have the right carriage returns
+		$rawCert=str_replace("\n","\\n",$nutanixCluster["caCerts"]);
+
+		$config_params="{\"hostname\": \"".$nutanixCluster["hostname"]."\",
+				  \"nutanixClusterUuid\": \"".$nutanixCluster["nutanixClusterUuid"]."\",
+				  \"username\": \"".$nutanixCluster["username"]."\",
+				  \"password\": \"".$nutanixCluster["password"]."\",
+				  \"caCerts\": \"".$rawCert."\"}";
+				
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		
+		// If task submitted, return task ID either return error
+		$result=json_decode($result);
+		if(isset($result->id)) return $result->id;
+		else return $result;
+	}
+	
+	// -----------------------------------------
+	// Function to retrieve the cluster add logs
+	// -----------------------------------------
+	
+	function rkNutanixAddStatus($clusterConnect,$taskID)
+	{
+		// 2 different API calls are required in this case 
+		// /api/v1/event/latest?limit=1&object_type=NutanixCluster&order_by_time=desc;
+		// /api/v1/event_series/
+
+		$API="/api/v1/event/latest?limit=1&object_type=NutanixCluster&order_by_time=desc";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+
+		curl_close($curl);
+		
+		$seriesID=$result->data[0]->latestEvent->eventSeriesId;
+		
+		// Second API call with all details about the add job
+
+		$API="/api/v1/event_series/".$seriesID;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+
+		curl_close($curl);
+		return($result);
+	}
+
+	// ---------------------------------------------------------------
+	// Function returning all Nutanix clusters ID configured on Rubrik
+	// ---------------------------------------------------------------
+
+	function rkGetNutanixClusters($clusterConnect)
+	{
+		$API="/api/internal/nutanix/cluster";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		$result=json_decode($result);
+		
+		$ids=array();
+		
+		for($i=0;$i<count($result->data);$i++)
+		{
+			$ids[]=$result->data[$i]->id;
+		}
+		
+		return $ids;
+	}
+
+	// ---------------------------------------------------------------
+	// Function returning all details for specific Nutanix clusters ID
+	// ---------------------------------------------------------------
+
+	function rkGetNutanixCluster($clusterConnect,$clusterID)
+	{
+		$API="/api/internal/nutanix/cluster/".urlencode($clusterID);
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		curl_close($curl);
+		$result=json_decode($result);
+
+		return($result);
+	}
+
+	// ---------------------------------------------------------------
+	// Function deleting a Nutanix cluster from Rubrik configuration
+	// ---------------------------------------------------------------
+
+	function rkDelNutanix($clusterConnect,$clusterID)
+ 	{
+		$API="/api/internal/nutanix/cluster/".urlencode($clusterID);
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+		curl_close($curl);
+
+		return $result;
+ 	}
+
+	// -----------------------------------------
+	// Function to retrieve the cluster del logs
+	// -----------------------------------------
+
+	function rkNutanixDelStatus($clusterConnect,$taskID)
+	{
+		// 2 different API calls are required in this case 
+		// /api/v1/event/latest?limit=1&object_type=NutanixCluster&order_by_time=desc;
+		// /api/v1/event_series/
+
+		$API="/api/v1/event/latest?limit=1&object_type=NutanixCluster&order_by_time=desc";
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+
+		curl_close($curl);
+		
+		$seriesID=$result->data[0]->latestEvent->eventSeriesId;
+		
+		// Second API call with all details about the add job
+
+		$API="/api/v1/event_series/".$seriesID;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$result = curl_exec($curl);
+		$result=json_decode($result);
+
+		curl_close($curl);
 		return($result);
 	}
 	
@@ -911,6 +1132,63 @@
 
 		return $result;	
 	}
+
+	// --------------------------------------------------------
+	// Function returning all vmware and Nutanix VMs in a array
+	// --------------------------------------------------------
+
+	function rkGetAllVMs($clusterConnect)
+	{
+		// -------------------------------------------------------
+		// Function to sort array according to specified dimension
+		// -------------------------------------------------------
+	
+		function columnSort($unsorted, $column) 
+		{ 
+			$sorted = $unsorted; 
+			for ($i=0; $i < sizeof($sorted)-1; $i++) 
+			{ 
+				for ($j=0; $j<sizeof($sorted)-1-$i; $j++) 
+				if ($sorted[$j][$column] > $sorted[$j+1][$column]) 
+				{ 
+					$tmp = $sorted[$j]; 
+					$sorted[$j] = $sorted[$j+1]; 
+					$sorted[$j+1] = $tmp; 
+				}	 
+			} 
+			return $sorted; 
+		}
+
+		$VMs=array();
+
+		// List vmware vms and get their applied SLA
+		$vmware=rkGetvmwareVM($clusterConnect);
+	
+		for($i=0;$i<count($vmware->data);$i++)
+		{
+			$VMs[$i]["name"]=$vmware->data[$i]->name;
+			$VMs[$i]["hypervisor"]="vmware";
+			$VMs[$i]["sla"]=$vmware->data[$i]->effectiveSlaDomainName;
+			$VMs[$i]["vmid"]=$vmware->data[$i]->id;
+		}
+
+		// List Nutanix vms and get their applied SLA
+		$nutanix=rkGetNutanixVM($clusterConnect);
+
+		// start adding VMs after vmware vms in previously populated array
+		$start=count($VMs);
+	
+		for($i=$start;$i<count($nutanix->data);$i++)
+		{
+			$VMs[$i]["name"]=$nutanix->data[$i]->name;
+			$VMs[$i]["hypervisor"]="nutanix";
+			$VMs[$i]["sla"]=$nutanix->data[$i]->effectiveSlaDomainName;
+			$VMs[$i]["vmid"]=$nutanix->data[$i]->id;
+		}
+		
+		$VMs=columnSort($VMs,"name");
+		return ($VMs);
+	}
 	
 	// -------------------------------------------------------
 	// Function who returns the last num events in the Cluster
@@ -921,7 +1199,7 @@
 	// Archive, Audit, AuthDomain, Backup, CloudNativeSource, Configuration, Diagnostic, Instanciate, Maintenance, 
 	// NutanixCluster, Recovery, Replication, StorageArray, System, Vcd, VCenter
 	
-	function getRubrikEvents($clusterConnect,$numEvents,$eventType="Backup",$objectType,$objectName)
+	function getRubrikEvents($clusterConnect,$numEvents,$eventType,$objectType,$objectName)
 	{
 		$API="/api/internal/event?limit=".$numEvents."&event_type=".$eventType;
 
@@ -1301,9 +1579,6 @@
 		return($result[0]->id);		
 	}
 	
-
-
-
 	// --------------------------------------------------------
 	// Function who returns MS SQL Instance ID from Name / Host
 	// --------------------------------------------------------
@@ -1531,6 +1806,68 @@
 	//                           SLA related functions
 	// ==========================================================================
 	
+	// -------------------------------------
+	// Function who assigns SLA to an Object
+	// -------------------------------------
+
+	function rkSetSLA($clusterConnect,$vmID, $slaID)
+	{
+		$API="/api/v2/sla_domain/".$slaID."/assign";	
+		$config_params="
+						{
+  							\"managedIds\": [
+    						\"".$vmID."\"
+  							]
+						}";
+	
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+	
+	// ------------------------------------------------------
+	// Function who removes any SLA assignations to an Object
+	// ------------------------------------------------------
+	
+	function rkRemoveSLA($clusterConnect,$vmID)
+	{
+		$API="/api/v2/sla_domain/UNPROTECTED/assign";
+		$config_params="
+						{
+  							\"managedIds\": [
+    						\"".$vmID."\"
+  							]
+						}";
+	
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($curl);
+		curl_close($curl);
+
+		return json_decode($result);
+	}
+
 	// ---------------------------------------------------
 	// Function converts SLA ID to SLA Name
 	// ---------------------------------------------------
