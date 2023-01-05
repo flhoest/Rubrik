@@ -5,7 +5,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![rubrik_logo](http://rubrik.com/wp-content/uploads/2014/10/logo-large-gray.png)       ![php_logo](https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/062015/php_0.png?itok=W6WL-Rbh)
+![rubrik_logo](https://www.core-ict.be/hubfs/Logos/Partners/Rubrik-logo.png#keepProtocol)       ![php_logo](https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/062015/php_0.png?itok=W6WL-Rbh)
 
 ## Background
 
