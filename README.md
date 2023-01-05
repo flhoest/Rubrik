@@ -5,7 +5,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![rubrik_logo](https://upload.wikimedia.org/wikipedia/commons/9/9b/Rubrik_Logo.svg) ![php_logo](https://img1.pnghut.com/16/13/23/GgiUPha5yv/elephant-text-serverside-scripting-technology-laravel.jpg)
+![rubrik_logo](https://upload.wikimedia.org/wikipedia/commons/9/9b/Rubrik_Logo.svg) ![php_logo](https://pngimg.com/uploads/php/small/php_PNG50.png)
 
 ## Background
 
