@@ -5,7 +5,7 @@
 ```
 This documentation is under review and considered as draft!
 ```
-![rubrik_logo]([https://www.core-ict.be/hubfs/Logos/Partners/Rubrik-logo.png#keepProtocol](https://www.channelbiz.fr/wp-content/uploads/2018/05/Rubrik-logo-650x513.jpg))       ![php_logo](https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/062015/php_0.png?itok=W6WL-Rbh)
+![rubrik_logo](https://www.channelbiz.fr/wp-content/uploads/2018/05/Rubrik-logo-650x513.jpg)       ![php_logo](https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/062015/php_0.png?itok=W6WL-Rbh)
 
 ## Background
 
