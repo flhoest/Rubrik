@@ -1,8 +1,8 @@
 <?php
 
 	//////////////////////////////////////////////////////////////////////////////
-	//                     Rubrik Php Framework version 1.9                     //
-	//                        (c) 2018-2022 - F. Lhoest                         //
+	//                     Rubrik Php Framework version 2.0                     //
+	//                        (c) 2018-2023 - F. Lhoest                         //
 	//////////////////////////////////////////////////////////////////////////////
 	//                       Created on macOS with BBEdit                       //
 	//////////////////////////////////////////////////////////////////////////////
@@ -12,10 +12,10 @@
 					 |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /
 					 |    |   \|  |  / | \_\ \ |  | \/|  ||    < 
 					 |____|_  /|____/  |___  / |__|   |__||__|_ \
-						\/             \/                  \/ Php Framework
+							\/             \/                  \/ Php Framework
 	*/
 
-	// Function index in alphabetical order (total 108)
+	// Function index in alphabetical order (total 110)
 	//------------------------------------------------
 
 	// day2text($days)
@@ -39,6 +39,7 @@
 	// rkCreateSLA($clusterConnect,$slaName,$HFreq,$HRet,$DFreq,$DRet,$MFreq,$MRet,$YFreq,$YRet)
 	// rkCreateUser($clusterConnect,$userName,$Password)
 	// rkDelNutanix($clusterConnect,$clusterID)
+	// rkDelServiceAccountToken($clusterConnect)
 	// rkDelUnmanagedObject($clusterConnect,$objName,$keepAmount)
 	// rkDeleteUnmanaged($clusterConnect,$ObjID)
 	// rkDeleteUser($clusterConnect,$userID)
@@ -89,6 +90,7 @@
 	// rkGetSLAid($clusterConnect,$SLAname)
 	// rkGetSLAname($clusterConnect,$SLAid)
 	// rkGetSLAs($clusterConnect)
+	// rkGetServiceAccountToken($clusterConnect)
 	// rkGetSnapshotCount($clusterConnect)
 	// rkGetSnapshotFromFilesetID($clusterConnect,$filesetID)
 	// rkGetSnapshotSize($clusterConnect,$vmID,$snapID)
@@ -126,10 +128,75 @@
 	// rkSetBanner($clusterConnect,$bannerText)
 	// rkSetSLA($clusterConnect,$vmID,$slaID)
 	// rkStartIntegrityChk($clusterConnect,$objectID,$snapID="")
-																			
+																				
 	// ==========================================================================
 	//                           Generic functions
 	// ==========================================================================
+
+	// ----------------------------------------------------------
+	// Function who creates a token based on service account creds
+	// ----------------------------------------------------------
+	
+	function rkGetServiceAccountToken($clusterConnect)
+	{
+		$API="/api/v1/service_account/session";
+
+		$config_params="
+		{
+  			\"serviceAccountId\": \"".$clusterConnect["username"]."\", 
+  			\"secret\": \"".$clusterConnect["password"]."\"
+  		}
+		";
+
+		$curl = curl_init();
+   		
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		$result = json_decode(curl_exec($curl));
+		
+		if(isset($result->message)) return FALSE;
+		else return($result->token);
+
+		curl_close($curl);
+
+		return($result->token);
+	}
+
+	// ----------------------------------------------------------------
+	// Function who deletes the secure token session from the appliance
+	// ----------------------------------------------------------------
+
+	// /!\ Note : $clusterConnect must containe a "token" dimention in this case /!\
+
+	function rkDelServiceAccountToken($clusterConnect)
+	{
+		$API="/api/v1/session/me";
+
+		$curl = curl_init();
+   		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$clusterConnect["token"]));
+
+		$result = json_decode(curl_exec($curl));
+		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
+
+		curl_close($curl);
+
+		// Return code wheen successful is 204
+		if($info==204) return TRUE;
+		else return FALSE;
+
+	}
 
 	// ---------------------------------------------------------------------------
 	// Function to populate a return variable (JSON text) with all cluster details
@@ -140,14 +207,30 @@
 		$API="/api/v1/cluster/me";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 		return $result;
@@ -221,6 +304,8 @@
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT,10);
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 
@@ -248,14 +333,30 @@
 		$API="/api/v1/cluster/me";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 
@@ -529,14 +630,30 @@
 		$API="/api/internal/nutanix/vm";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 		return json_decode($result);
@@ -600,14 +717,30 @@
 		$API="/api/v1/vmware/vm";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 
@@ -921,14 +1054,30 @@
 		$API="/api/v1/fileset";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 
@@ -1386,14 +1535,30 @@
 		$API="/api/v1/config/history/list_updates?namespace=local_atlas&source=Upgrade";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result=curl_exec($curl);
 		$result=json_decode($result);
 		curl_close($curl);
@@ -1459,14 +1624,30 @@
 		$API="/api/v1/mssql/db";
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = curl_exec($curl);
 		curl_close($curl);
 
@@ -2652,7 +2833,6 @@
 
 	function rkGetLastSnapDuration($clusterConnect,$vmName)
 	{
-	
 		// Since CDM 5.2, this API has been changed. Need to test version to call relevant API 
 		
 		$cdm_version=rkGetClusterVersion($clusterConnect);
@@ -2662,14 +2842,30 @@
 			$API="/api/internal/event_series?status=Success&event_type=Backup&object_name=".urlencode($vmName);
 
 			$curl = curl_init();
-			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+			
+			if(isset($clusterConnect["token"]))
+			{
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+			}
+			else
+			{
+				curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+			}
+			
 			$result = curl_exec($curl);
 			curl_close($curl);
 			return json_decode($result)->data;	
@@ -2683,14 +2879,30 @@
 			$API="/api/v1/event/latest?event_status=Success&order_by_time=desc&event_type=Backup&object_name=".urlencode($vmName);
 
 			$curl = curl_init();
-			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+			
+			if(isset($clusterConnect["token"]))
+			{
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+			}
+			else
+			{
+				curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+			}
+
 			$result = curl_exec($curl);
 			$result=json_decode($result);
 
@@ -2703,14 +2915,30 @@
 			$API="/api/v1/event_series/".$seriesID;
 
 			$curl = curl_init();
-			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+			if(isset($clusterConnect["token"]))
+			{
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+			}
+			else
+			{
+				curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+				curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+			}
+
 			$result = curl_exec($curl);
 			$result=json_decode($result);
 
@@ -3610,16 +3838,33 @@
 		}
 		
 		$curl = curl_init();
-   		curl_setopt($curl, CURLOPT_POST, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		if(isset($clusterConnect["token"]))
+		{
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+            curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Authorization: Bearer '.$clusterConnect["token"]));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        }
+        else
+        {
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS,$config_params);
+            curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+            curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($config_params),'Accept: application/json'));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        }
+
 		$result = json_decode(curl_exec($curl));
 		$info=curl_getinfo($curl,CURLINFO_HTTP_CODE);
 		$error=curl_errno($curl);
@@ -3638,14 +3883,30 @@
 		$API="/api/v1/backup/verify/".urlencode($eventID);
 
 		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
-		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		if(isset($clusterConnect["token"]))
+		{
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Authorization: Bearer '.$clusterConnect["token"]));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);		
+		}
+		else
+		{
+			curl_setopt($curl, CURLOPT_USERPWD, $clusterConnect["username"].":".$clusterConnect["password"]);
+			curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($curl, CURLOPT_URL, "https://".$clusterConnect["ip"].$API);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+		}
+
 		$result = json_decode(curl_exec($curl));
 		curl_close($curl);
 
@@ -3916,8 +4177,6 @@
 						15 =>
 					array( "codeName" => "BWhi",
 							"codeValue" => "\e[1;37m"),						
-
-
 						16 =>
 					array( "codeName" => "UBlack",
 							"codeValue" => "\e[4;30m"),						
