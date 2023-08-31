@@ -15,7 +15,7 @@
 			"password" => "70617373776f7264",
 			"ip" => "192.168.1.2"
 	));
-			
+						
 	// ============================================================
 	// Entry point
 	// ============================================================
@@ -28,15 +28,15 @@
 	print(rkColorOutput(" |       _/|  |  \ | __ \ \_  __ \|  ||  |/ /\n"));
 	print(rkColorOutput(" |    |   \|  |  / | \_\ \ |  | \/|  ||    < \n"));
 	print(rkColorOutput(" |____|_  /|____/  |___  / |__|   |__||__|_ \\\n"));
-	print(rkColorOutput("		\/             \/          \/ \n"));
+	print(rkColorOutput("	\/             \/  	           \/ \n"));
 	
 	print("+--------------------------------------------------+\n");
 	print("|    ".rkColorBold("Rubrik Cluster Executive Summary Generator")."    |\n");
 	print("+--------------------------------------------------+\n");
-	print("\t\t\t  (c) 2021 - Frederic Lhoest\n\n");
+	print("\t\t (c) 2021-2023 - Frederic Lhoest\n\n");
 	print("This script is collecting data from specified Rubrik clusters, summarizes details and reports\n");
 	print("aggregated numbers for each clusters.\n\n");
-	print("It requires the PhP Rubrik Framework available here : ".inColor("UCya","https://github.com/flhoest/Rubrik").".\n\n");
+	print("It requires the PhP Rubrik Framework available here : ".inColor("UCya","https://github.com/flhoest/Rubrik")."\n\n");
 
 	// Init Grand Total array
 	$grandTotal=array("totalStorage" => 0,
@@ -51,7 +51,10 @@
 		// Create connection string
 		$connect["ip"]=$clusterConnect[$i]["ip"];
 		$connect["username"]=$clusterConnect[$i]["username"];
-		$connect["password"]=hex2bin($clusterConnect[$i]["password"]);
+		$connect["password"]=$clusterConnect[$i]["password"];
+
+		$token=rkGetServiceAccountToken($connect);
+		$connect["token"]=$token;
 
 		// Call to the BIG function
 		$data=rkGetExecSum($connect);
@@ -84,6 +87,7 @@
 		print(inColor("BGre","{".$data["name"]."} ")."| Snapshots : ".rkColorOutput($data["snaps"])."\n");
 		print(inColor("BGre","{".$data["name"]."} ")."| Data Ingested : ".rkColorOutput(rkFormatBytes($data["dataIngested"]))."\n");
 		print(inColor("BGre","{".$data["name"]."} ")."| Data Stored : ".rkColorOutput(rkFormatBytes($data["dataStored"]))."\n");
+		print(inColor("BGre","{".$data["name"]."} ")."| Runway : ".rkColorOutput($data["runway"])." day(s)\n");
 
 		// Ratio is calculated based on this formula :
 		// https://www.snia.org/sites/default/files/Understanding_Data_Deduplication_Ratios-20080718.pdf page 5 
@@ -110,7 +114,7 @@
 			}
 			else print("\n");
 		}
-		print("+-----------------------------------------------------------\n\n");
+		print(inColor("BGre","{".$data["name"]."} ")."+-----------------------------------------------------------\n\n");
 		
 		// Commpute summary data per clusters
 		$grandTotal["totalStorage"]+=$data["totalStorage"];
@@ -118,6 +122,75 @@
 		$grandTotal["snaps"]+=$data["snaps"];
 		$grandTotal["dataIngested"]+=$data["dataIngested"];
 		$grandTotal["dataStored"]+=$data["dataStored"];
+		// need to add physical node count as well
+		
+		// Display details for SLAs
+		
+		print("\n");
+		print(inColor("BGre","{".$data["name"]."} ")); 
+		print(inColor("BGre","+---------------------------------------------\n"));
+		print(inColor("BGre","{".$data["name"]."} ")); 
+		print(inColor("BGre","| SLA Objects Details"));
+		print(" (as of ".date('Y-m-d').")\n");
+
+		for($k=0;$k<count($data["sla_storage"]);$k++)
+		{
+			// Only consider non null SLA (SLA with storage)
+			if($data["sla_storage"][$k]["size"])
+			{
+				print(inColor("BGre","{".$data["name"]."} ")); 
+				print(inColor("BGre","+---------------------------------------------------------\n"));
+				print(inColor("BGre","{".$data["name"]."} ")); 
+				print(inColor("BGre","| ".rkColorBold("Objects protected by [".$data["sla_storage"][$k]["name"]."]")." : \n"));
+				print(inColor("BGre","{".$data["name"]."} ")); 
+				print(inColor("BGre","+---------------------------------------------------------\n"));
+
+				$obj=rkGetSnappable($connect,rkGetSLAid($connect,$data["sla_storage"][$k]["name"]));
+				for($l=0;$l<count($obj);$l++)
+				{
+					// convert snappable ID to name
+					$display=$obj[$l];
+			
+					if(strpos($display,"NutanixVirtualMachine") !== FALSE)
+					{
+						$display=rkGetNutanixVMName($connect,$display);
+						print(inColor("BGre","{".$data["name"]."} ")); 
+						print(inColor("BGre","| "));
+						print("(Nutanix)\t");
+						print(str_pad(rkColorOutput($display),56," ",STR_PAD_RIGHT));
+						$tmp=rkGetObjectStorage($connect,$display,"nutanix");
+						print("(".$tmp["snapCount"]." snaps | ".rkFormatBytes($tmp["storage"]).")\n");
+					} 
+					elseif(strpos($display,"VirtualMachine") !== FALSE)
+					{
+						$display=rkGetvmwareVMName($connect,$display);
+						print(inColor("BGre","{".$data["name"]."} ")); 
+						print(inColor("BGre","| "));
+						print("(vmware)\t");
+						print(str_pad(rkColorOutput($display),56," ",STR_PAD_RIGHT));
+						$tmp=rkGetObjectStorage($connect,$display,"vmware");
+						print("(".$tmp["snapCount"]." snaps | ".rkFormatBytes($tmp["storage"]).")\n");
+
+					}
+					elseif(strpos($display,"Fileset") !== FALSE)
+					{
+						$display=rkGetfileSetName($connect,$display);
+						print(inColor("BGre","{".$data["name"]."} ")); 
+						print(inColor("BGre","| "));
+						print("(Fileset)\t");
+						print(str_pad(rkColorOutput($display),56," ",STR_PAD_RIGHT));
+						$tmp=rkGetObjectStorage($connect,$display,"fileset");
+						print("(".$tmp["snapCount"]." snaps | ".rkFormatBytes($tmp["storage"]).")\n");
+					}
+
+				}
+			}
+		}
+		print("\n");
+		
+		// Delete token
+		rkDelServiceAccountToken($connect);
+
 	}
 	
 	// Display Total figures for all clusters
@@ -131,8 +204,6 @@
 	print("| All snapshots : ".rkColorOutput($grandTotal["snaps"])."\n");
 	print("| Total data ingested : ".rkColorOutput(rkFormatBytes($grandTotal["dataIngested"]))."\n");
 	print("| Total data stored : ".rkColorOutput(rkFormatBytes($grandTotal["dataStored"]))."\n");
-	print(inColor("BGre","{".$data["name"]."} ")."| Runway : ".rkColorOutput($data["runway"])." day(s)\n");
-
 	
 	// Compute overall storage savings ratio
 	
